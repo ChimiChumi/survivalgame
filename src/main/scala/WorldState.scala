@@ -1,10 +1,6 @@
-import org.json4s.JsonDSL._
-import org.json4s._
-import org.json4s.native.JsonMethods._
-
-implicit val formats = DefaultFormats
 sealed trait Request {
   def applyRequest(state: WorldState): WorldState
+  // similar to switch-case request matching, but more optimized. The requests can directly call themselves.
 }
 
 /**
@@ -66,42 +62,35 @@ trait WorldState {
   def handle(request: Request): WorldState
 }
 
+//todo finish docs
 /**
- * A separate class containing information about
- * @param map
- * @param players
- * @param mobs
- * @param gameRules
+ * A separate class containing information about active rules and entities during the session.
+ * @param map           a 2D vector of blocks. This is considered the playable world
+ * @param players       players present in the game
+ * @param mobs          mobs present in the game
+ * @param gameRules     rules present in the game
  */
 
-//TODO: kerdes mobokkal, stb
 case class WorldMap(
                      map: Vector[Vector[Placable]],
-                     players: Vector[Player],
-                     mobs: Vector[Mob],
+                     players: Map[String, Player],
+                     mobs: Map[String, Mob],
                      gameRules: GameRules
                    ) {}
 
 /**
- * @param worldMap    WorldState receives previously defined WorldMap and it's data
- * @param requests    //TODO handle request nem ugyan az??
+ * @param worldMap    the WorldState is initialized with a previously defined WorldMap and it's data
+ * @param requests    requests in a sequence waiting to be processed
  */
 case class WorldStateImpl(worldMap: WorldMap, requests: Seq[Request]) extends WorldState {
   override def handle(request: Request): WorldState = ???
-  def hasRequests: Boolean = ???
-  def processNextRequest: WorldState = ???
-  def players: Vector[Player] = ???
-  def apply(x: Int, y: Int):Option[Placable] = ???
-  def apply(position: Position):Option[Placable] = ???
-  def width:Int = ???
-  def height:Int = ???
-  def saveWorldState(worldState: WorldState, filePath: String): String = ??? // save WorldState object to JSON file
-  def loadWorldState(filePath: String): WorldState = ??? // load WorldState object from a JSON file
-}
-
-
-//TODO megirni
-case class WorldStateJson(worldMap: WorldMap, requests: Seq[Request])
-object WorldStateJson {
-  implicit val formats: DefaultFormats.type = DefaultFormats
+  def hasRequests: Boolean = ???  // checks if there are any unhandled requests
+  def processNextRequest: WorldState = ???  // move to the next request
+  def players: Vector[Player] = ???  // get the actual players present in the world
+  def apply(x: Int, y: Int):Option[Placable] = ???  // get the position of a block if exists
+  def apply(position: Position):Option[Placable] = ???  // similar as the previous
+  def width:Int = ???   // map width
+  def height:Int = ???  // map height
+  def saveWorldState(worldState: WorldState, filePath: String): Unit = ??? // save WorldState object to JSON file
+  def loadWorldState(filePath: String): Option[WorldState] = ??? // load WorldState object from a JSON file
 }

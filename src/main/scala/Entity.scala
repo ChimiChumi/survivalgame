@@ -5,7 +5,6 @@ trait Entity {
   val currentHP: Int
   val position: Position
 
-  //TODO: baseStat ???
   def baseStats: EntityStats    // default stats
   def heal(hp: Int): Entity     // increase hp
   def takeDamage(hp: Int): Option[Entity]  // lower hp
@@ -16,7 +15,7 @@ trait Entity {
   def tick: Option[Entity]  // clock, needed to check entity status after each tick
 }
 
-//todo:basestats kerdes
+
 case class Mob(
                 name: String,
                 id: String,

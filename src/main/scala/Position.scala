@@ -1,5 +1,7 @@
 /**
- * Getting the exact position value on the map using a 2D coordinate pair
+ * Getting the exact position value on the map using a 2D coordinate pair.
+ * Useful for handling things inside the world map
+ *
  * @param x   coordinate
  * @param y   coordinate
  */

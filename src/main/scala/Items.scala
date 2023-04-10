@@ -8,6 +8,7 @@ trait Placable
 /**
  * The chest is a placable item type, allowing the player to place it on the world map.
  * This acts like an itemstack, containing different items.
+ *
  * @param id              A unique id differentiating the chests between them
  * @param maxCapacity     The maximum capacity of items it can hold.
  * @param items           Currently stored items inside.
@@ -26,8 +27,10 @@ case class Chest(id: String, maxCapacity: Int, items: Vector[ItemStack]) extends
 
 /**
  * The ItemStack tries to combine two itemstacks.
- * - if the two can be joined, it will be merged
- * - if the two overflows, fills the first and a new stack is created from the remaining amount
+ *    - if the two can be joined, it will be merged
+ *
+ *    - if the two overflow, the first stack is filled
+ *      and a new stack is created from the remaining amount
  *
  * @param item  item to be stacked
  * @param count amount of the item
@@ -57,10 +60,8 @@ case class ItemStack(item: Item, quantity: Int) {
 }
 
 
-//TODO ezek szerintem nem jók. Player EntityStats-jánál kell módosítani ? Consumable, Armor effektek ?
-
 /**
- * Weapon item type providing defense. i.e: Axe, Sword, etc.
+ * Weapon item type providing defense. (i.e: Axe, Sword, etc.)
  * Only one can be equipped at a time. Doesn't stack.
  *
  * @param name      item name
@@ -74,7 +75,7 @@ case class Weapon(name: String, damage: Int) extends Item {
 
 
 /**
- * Armor item type providing defense. i.e: Helmet, ChestPlate, etc.
+ * Armor item type providing defense. (i.e: Helmet, ChestPlate, etc.)
  * Only one can be equipped at a time. Doesn't stack.
  *
  * @param name      item name
@@ -93,7 +94,7 @@ case class Armor(name: String, defense: Int) extends Item {
  * @param effects   possible effects
  */
 case class Consumable(name: String, effects: Vector[Effect]) extends Item {
-  override val maxStackSize: Int = 3 // random pre defined number for consumable stack
+  override val maxStackSize: Int = 3 // random pre-defined number for consumable stack
   def applyEffects(entity: Entity): Entity = ???
 }
 
@@ -110,6 +111,7 @@ case class Equipment(name: String, effects: Vector[Effect]) extends Item {
 
 /**
  * A recipe is used to craft new items from materials.
+ *
  * @param inputs    crafting ingredients (i.e: 2 wood, 3 stone, etc)
  * @param output    crafting result (i.e: 1 sword)
  */
