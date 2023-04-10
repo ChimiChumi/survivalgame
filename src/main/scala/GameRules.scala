@@ -1,7 +1,9 @@
 /**
+ * The global rules of the world.
+ * It consists of multiple getters for items, recipes and other things present in the game.
  *
- * @param itemTypes
- * @param recipeTypes
+ * @param itemTypes      Items used in the game
+ * @param recipeTypes    Crafting recipes
  */
 case class GameRules(itemTypes: Vector[Item], recipeTypes:Vector[Item]) {
   def getItems(p: Item => Boolean):Option[Vector[Item]] = ???
