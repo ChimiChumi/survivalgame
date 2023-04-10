@@ -1,4 +1,10 @@
 trait Entity {
+  val name: String
+  val id: String
+  val currentEffects: Vector[EffectDuration] // pair of effects and duration
+  val currentHP: Int
+  val position: Position
+
   //TODO: baseStat ???
   def baseStats: EntityStats    // default stats
   def heal(hp: Int): Entity     // increase hp
