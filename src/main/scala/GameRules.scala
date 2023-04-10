@@ -1,3 +1,8 @@
+/**
+ *
+ * @param itemTypes
+ * @param recipeTypes
+ */
 case class GameRules(itemTypes: Vector[Item], recipeTypes:Vector[Item]) {
   def getItems(p: Item => Boolean):Option[Vector[Item]] = ???
   def getPlaceables(p: Placable => Boolean): Option[Vector[Placable]] = ???
