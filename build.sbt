@@ -1,4 +1,4 @@
-name := "scala-gyak-06"
+name := "scala-merfoldko1"
 version := "1.0"
 scalaVersion := "2.13.3"
 libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.10"
