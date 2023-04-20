@@ -5,7 +5,14 @@ trait Duration
  * @param ticks   for how long the effect should last
  */
 case class TicksLeft(ticks: Int) extends Duration{
-  def getRemainingTicks: Option[Duration] = ???
+  def getRemainingTicks: Option[Duration] = {
+    if (ticks <= 0) {
+      None
+    }
+    else {
+      Some(TicksLeft(ticks - 1))
+    }
+  }
 }
 
 /**

@@ -21,6 +21,14 @@ case class EffectDuration(effect: Effect, duration: Duration){
  *
  *  - Poison:          modifies health (probably in each tick)
  */
-case class IncreaseDamage(value: Int) extends Effect {}
-case class ScaleDefense(percentage: Double) extends Effect {}
-case class Poison(value: Int) extends Effect {}
+
+
+case class IncreaseDamage(value: Int) extends Effect {
+  override def apply(stats: EntityStats): EntityStats = ???
+}
+case class ScaleDefense(percentage: Double) extends Effect {
+  override def apply(stats: EntityStats): EntityStats = ???
+}
+case class Poison(value: Int) extends Effect{
+  override def apply(stats: EntityStats): EntityStats = ???
+}
