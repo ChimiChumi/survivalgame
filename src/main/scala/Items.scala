@@ -1,5 +1,5 @@
 trait Item {
-  val name: String
+  val id: String
   val maxStackSize: Int
 }
 
@@ -14,13 +14,14 @@ trait Placable extends Item
  * @param items       Currently stored items inside.
  */
 case class Chest(id: String, maxCapacity: Int, items: Vector[ItemStack]) extends Placable {
+  require(maxCapacity > 0, s"Chest '$id' capacity must be a positive number!")
+  require(items.length <= maxCapacity, s"Chest '$id' cannot have more than $maxCapacity items")
+
   override val maxStackSize: Int = 5
-  override val name: String = "Chest"
-  require(maxCapacity > 0, "Capacity must be a positive number!")
 
   def isEmpty: Boolean = items.isEmpty
 
-  def capacity: Int = maxCapacity - items.length // number of available slots (i.e: [#] [#] [#] [_] [_])
+  def capacity: Int = maxCapacity - items.count(_ != null) // number of available slots (i.e: [#] [#] [#] [_] [_])
 
   // asking for a specific stack on a given slot
   def apply(index: Int): Option[ItemStack] = {
@@ -30,49 +31,85 @@ case class Chest(id: String, maxCapacity: Int, items: Vector[ItemStack]) extends
 
   // adding stacks of items to the chest
   def +(stack: ItemStack): (Chest, Option[ItemStack]) = {
-    val index = items.indexWhere(_.item == stack.item)
-    if (index == -1) {
-      // If the stack is not in the chest yet, add it.
-      val newItems = items :+ stack
-      (Chest(id, maxCapacity, newItems), None)
-    }
+    if (this.isEmpty) //empty chest
+      (Chest(id, maxCapacity, items.appended(stack)), None)
 
     else {
-      val existingStack = items(index)
-      val (mergedStack, overflowStack) = existingStack + stack
 
-      if (overflowStack.isEmpty) {
-        // If the stack can be merged, replace the existing stack with the merged stack.
-        val newItems = items.updated(index, mergedStack)
-        (Chest(id, maxCapacity, newItems), None)
+      if (!items.contains(stack)) {
+
+        val index = items.indexWhere(_ == null)
+
+        if (index >= 0) { // found an empty slot
+          val newItems = items.updated(index, stack)
+          (Chest(id, maxCapacity, newItems), None)
+        }
+        else
+          throw new Exception(s"Chest $id is at maximum capacity!")
       }
 
       else {
-        // If the stack overflows, fill up the existing stack with what can fit,
-        // and add the overflow stack recursively
-        val filledStack = ItemStack(existingStack.item, existingStack.quantity + mergedStack.quantity - overflowStack.get.quantity)
-        val newItems = items.updated(index, filledStack)
-        val (updatedChest, newOverflowStackOpt) = Chest(id, maxCapacity, newItems) + overflowStack.get
-        (updatedChest, newOverflowStackOpt)
+        val itemIndex = items.indexWhere(itemStack => itemStack.item == stack.item && itemStack.quantity < stack.item.maxStackSize)
+        if (itemIndex >= 0) { // found a matching stack with space
+          val existingStack = items(itemIndex)
+          val newQuantity = existingStack.quantity + stack.quantity
+          val newStack = ItemStack(existingStack.item, math.min(newQuantity, existingStack.item.maxStackSize))
+          val newItems = items.updated(itemIndex, newStack)
+          val remainingQuantity = newQuantity - newStack.quantity
+          val remainingStack = if (remainingQuantity > 0) Some(ItemStack(stack.item, remainingQuantity)) else None
+          (Chest(id, maxCapacity, newItems), remainingStack)
+        } else { // no matching stack with space found
+          (this, Some(stack))
+        }
       }
     }
   }
 
-  def swap(index: Int, stack: ItemStack): (Chest, Option[ItemStack]) = {
-    if (index >= maxCapacity || index < 0) {
-      (this, Some(stack))
-    }
-    else {
-      val (left, right) = items.splitAt(index)
-      val updatedItems = left ++ Vector(stack) ++ right.drop(1)
-      val updatedChest = this.copy(items = updatedItems)
-      (updatedChest, right.headOption)
-    }
+
+
+//val newItems = items :+ stack
+//(Chest(id, maxCapacity, newItems), None)
+
+//    else {
+//      val existingStack = items(index)
+//      val (mergedStack, overflowStack) = existingStack + stack
+//
+//      if (overflowStack.isEmpty) {
+//        // If the stack can be merged, replace the existing stack with the merged stack.
+//        val newItems = items.updated(index, mergedStack)
+//        (Chest(id, maxCapacity, newItems), None)
+//      }
+//
+//      else {
+//        // If the stack overflows, fill up the existing stack with what can fit,
+//        // and add the overflow stack recursively
+//        val filledStack = ItemStack(existingStack.item, existingStack.quantity + mergedStack.quantity - overflowStack.get.quantity)
+//        val newItems = items.updated(index, filledStack)
+//        val (updatedChest, newOverflowStackOpt) = Chest(id, maxCapacity, newItems) + overflowStack.get
+//        (updatedChest, newOverflowStackOpt)
+//      }
+//    }
+
+def swap(index: Int, stack: ItemStack): (Chest, Option[ItemStack]) = {
+  if (index >= maxCapacity || index < 0) {
+    (this, Some(stack))
   }
+  else {
+    val (left, right) = items.splitAt(index)
+    val updatedItems = left ++ Vector(stack) ++ right.drop(1)
+    val updatedChest = this.copy(items = updatedItems)
+    (updatedChest, right.headOption)
+  }
+}
 
-  def contains(item: Item): Boolean = items.exists(_.item == item)
+def contains(item: Item): Boolean = items.exists(_.item == item)
 
-  def count(item: Item): Int = items.foldLeft(0)((sum, current) => if (item == current.item) sum + current.quantity else sum)
+def count(item: Item): Int = items.foldLeft(0) { (sum, current) =>
+  if (current != null && item == current.item)
+    sum + current.quantity
+  else
+    sum
+}
 }
 
 
@@ -117,14 +154,14 @@ case class ItemStack(item: Item, quantity: Int) {
  * @param name   item name
  * @param damage attack damage stat value
  */
-case class Weapon(name: String, damage: Int) extends Item {
+case class Weapon(id: String, damage: Int) extends Item {
   override val maxStackSize: Int = 1
   require(damage > 0, "Damage value must be positive!")
 
   def applyDamage(entity: Entity): Entity = ???
 }
 
-case class Test(name: String, override val maxStackSize: Int) extends Item
+case class Test(id: String, override val maxStackSize: Int) extends Item
 
 
 /**
@@ -134,7 +171,7 @@ case class Test(name: String, override val maxStackSize: Int) extends Item
  * @param name    item name
  * @param defense defense stat value
  */
-case class Armor(name: String, defense: Int) extends Item {
+case class Armor(id: String, defense: Int) extends Item {
   override val maxStackSize: Int = 1
   require(defense > 0, "Defense value must be positive!")
 
@@ -147,7 +184,7 @@ case class Armor(name: String, defense: Int) extends Item {
  * @param name    item name
  * @param effects possible effects
  */
-case class Consumable(name: String, effects: Vector[Effect]) extends Item {
+case class Consumable(id: String, effects: Vector[Effect]) extends Item {
   override val maxStackSize: Int = 3 // random pre-defined number for consumable stack
 
   def applyEffects(entity: Entity): Entity = ???
@@ -159,7 +196,7 @@ case class Consumable(name: String, effects: Vector[Effect]) extends Item {
  * @param name    item name
  * @param effects possible effects
  */
-case class Equipment(name: String, effects: Vector[Effect]) extends Item {
+case class Equipment(id: String, effects: Vector[Effect]) extends Item {
   override val maxStackSize: Int = 1
 
   def applyEffects(entity: Entity): Entity = ???
