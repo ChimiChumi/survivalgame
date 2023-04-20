@@ -4,6 +4,7 @@ class ChestTest extends AnyFlatSpec {
 
   val item1 = Test("item1", 5)
   val item2 = Test("item2", 10)
+  val item3 = Test("item3", 4)
 
   //  val stack1 = ItemStack(item1, 3)
   //  val stack2 = ItemStack(item2, 5)
@@ -47,10 +48,6 @@ class ChestTest extends AnyFlatSpec {
     assert(chest1.count(item1) == 3)
   }
 
-  it should "count with empty slots" in {
-    assert(chest3.count(item2) == 15)
-  }
-
   it should "swap with present stack" in {
     val stack3 = ItemStack(Test("SWAPME", 5), 3)
     val expected = (Chest("chest1", 16, Vector(ItemStack(Test("item1", 5), 3), ItemStack(Test("SWAPME", 5), 3))), Some(ItemStack(Test("item2", 10), 5)))
@@ -65,10 +62,10 @@ class ChestTest extends AnyFlatSpec {
 
   //TODO: csak az első előfordulást tölti fel jól és alakul maradék. a maradék nem kerül be
   it should "operator + same stack ABOVE capacity" in {
-    val testStack = ItemStack(Test("item2", 10), 6)
+    val testStack = ItemStack(Test("item2", 10), 5)
     val result = chest3 + testStack
     val expected = (Chest("chest2", 16, Vector(ItemStack(Test("item2", 5), 5))), None)
-    //assert(result != expected)
+    //assert(result == expected)
     //assert(chest2.capacity - 1 == result._1.capacity)
     print(chest3 + testStack)
   }
@@ -100,6 +97,10 @@ class ChestTest extends AnyFlatSpec {
     assert(chest2.count(item1) == 0)
   }
 
+  it should "count with empty slots" in {
+    assert(chest3.count(item2) == 14)
+  }
+
   it should "swap, when empty slot" in {
     val test = ItemStack(Test("SWAPME", 5), 3)
     val expected = (Chest("chest3", 16,
@@ -111,7 +112,7 @@ class ChestTest extends AnyFlatSpec {
         ItemStack(Test("item1",5),1),
         null,
         null,
-        ItemStack(Test("item2",10),10),
+        ItemStack(Test("item2",10),9),
         null)), Some(null))
     val result = chest3.swap(3, test)
     assert(result == expected)
