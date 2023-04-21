@@ -29,87 +29,78 @@ case class Chest(id: String, maxCapacity: Int, items: Vector[ItemStack]) extends
     else None
   }
 
-  // adding stacks of items to the chest
-  def +(stack: ItemStack): (Chest, Option[ItemStack]) = {
-    if (this.isEmpty) //empty chest
-      (Chest(id, maxCapacity, items.appended(stack)), None)
-
+  def swap(index: Int, stack: ItemStack): (Chest, Option[ItemStack]) = {
+    if (index >= maxCapacity || index < 0) {
+      (this, Some(stack))
+    }
     else {
-
-      if (!items.contains(stack)) {
-
-        val index = items.indexWhere(_ == null)
-
-        if (index >= 0) { // found an empty slot
-          val newItems = items.updated(index, stack)
-          (Chest(id, maxCapacity, newItems), None)
-        }
-        else
-          throw new Exception(s"Chest $id is at maximum capacity!")
-      }
-
-      else {
-        val itemIndex = items.indexWhere(itemStack => itemStack.item == stack.item && itemStack.quantity < stack.item.maxStackSize)
-        if (itemIndex >= 0) { // found a matching stack with space
-          val existingStack = items(itemIndex)
-          val newQuantity = existingStack.quantity + stack.quantity
-          val newStack = ItemStack(existingStack.item, math.min(newQuantity, existingStack.item.maxStackSize))
-          val newItems = items.updated(itemIndex, newStack)
-          val remainingQuantity = newQuantity - newStack.quantity
-          val remainingStack = if (remainingQuantity > 0) Some(ItemStack(stack.item, remainingQuantity)) else None
-          (Chest(id, maxCapacity, newItems), remainingStack)
-        } else { // no matching stack with space found
-          (this, Some(stack))
-        }
-      }
+      val (left, right) = items.splitAt(index)
+      val updatedItems = left ++ Vector(stack) ++ right.drop(1)
+      val updatedChest = this.copy(items = updatedItems)
+      (updatedChest, right.headOption)
     }
   }
 
+  def contains(item: Item): Boolean = items.exists(_.item == item)
 
-
-//val newItems = items :+ stack
-//(Chest(id, maxCapacity, newItems), None)
-
-//    else {
-//      val existingStack = items(index)
-//      val (mergedStack, overflowStack) = existingStack + stack
-//
-//      if (overflowStack.isEmpty) {
-//        // If the stack can be merged, replace the existing stack with the merged stack.
-//        val newItems = items.updated(index, mergedStack)
-//        (Chest(id, maxCapacity, newItems), None)
-//      }
-//
-//      else {
-//        // If the stack overflows, fill up the existing stack with what can fit,
-//        // and add the overflow stack recursively
-//        val filledStack = ItemStack(existingStack.item, existingStack.quantity + mergedStack.quantity - overflowStack.get.quantity)
-//        val newItems = items.updated(index, filledStack)
-//        val (updatedChest, newOverflowStackOpt) = Chest(id, maxCapacity, newItems) + overflowStack.get
-//        (updatedChest, newOverflowStackOpt)
-//      }
-//    }
-
-def swap(index: Int, stack: ItemStack): (Chest, Option[ItemStack]) = {
-  if (index >= maxCapacity || index < 0) {
-    (this, Some(stack))
+  def count(item: Item): Int = items.foldLeft(0) { (sum, current) =>
+    if (current != null && item == current.item)
+      sum + current.quantity
+    else
+      sum
   }
-  else {
-    val (left, right) = items.splitAt(index)
-    val updatedItems = left ++ Vector(stack) ++ right.drop(1)
-    val updatedChest = this.copy(items = updatedItems)
-    (updatedChest, right.headOption)
+
+  // adding stacks of items to the chest
+  def +(stack: ItemStack): (Chest, Option[ItemStack]) = {
+    if (this.isEmpty)
+      (Chest(id, maxCapacity, items.appended(stack)), None)
+
+    //if chest has items inside
+    else {
+      var quantity = stack.quantity //original quantity
+      var currentItems = items //original item vector
+
+      while (quantity > 0) {
+        // index where the same stack is found
+        val itemIndex = currentItems.indexWhere(item => {
+          item != null && item.item == stack.item && item.quantity < stack.item.maxStackSize
+        })
+
+        // found a matching stack
+        if (itemIndex >= 0) {
+          //temporary stack
+          val existingStack = items(itemIndex)
+
+          //new quantity
+          val newQuantity = existingStack.quantity + quantity
+
+          //remaining quantity after filling up stack
+          quantity = newQuantity - existingStack.item.maxStackSize
+
+          //filling up stack
+          val newStack = ItemStack(existingStack.item, math.min(newQuantity, existingStack.item.maxStackSize))
+
+          // updated stack
+          currentItems = currentItems.updated(itemIndex, newStack)
+        }
+
+        // no matching stack with space found
+        else {
+          val index = currentItems.indexWhere(_ == null) // checking for empty slot
+
+          if (index >= 0) { // found an empty slot
+            val newItems = currentItems.updated(index, ItemStack(stack.item, quantity))
+            return (Chest(id, maxCapacity, newItems), None)
+          }
+          else
+          // no empty slot but we still have remaining items
+            return (this, Option[ItemStack](ItemStack(stack.item, quantity)))
+        }
+      }
+      // feltoltottuk az osszes stacket
+      (Chest(id, maxCapacity, currentItems), None)
+    }
   }
-}
-
-def contains(item: Item): Boolean = items.exists(_.item == item)
-
-def count(item: Item): Int = items.foldLeft(0) { (sum, current) =>
-  if (current != null && item == current.item)
-    sum + current.quantity
-  else
-    sum
-}
 }
 
 
@@ -144,6 +135,12 @@ case class ItemStack(item: Item, quantity: Int) {
       }
     }
   }
+
+  override def equals(that: Any): Boolean =
+    that match {
+      case that: ItemStack => that.item.id == this.item.id
+      case _ => false
+    }
 }
 
 

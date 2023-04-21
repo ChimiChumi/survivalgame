@@ -6,7 +6,7 @@ class ChestTest extends AnyFlatSpec {
   val item2 = Test("item2", 10)
   val item3 = Test("item3", 4)
 
-  //  val stack1 = ItemStack(item1, 3)
+  val stack1 = ItemStack(item1, 3)
   //  val stack2 = ItemStack(item2, 5)
 
   val chest1 = Chest("chest1", 16, Vector(ItemStack(item1, 3), ItemStack(item2, 5)))
@@ -20,6 +20,7 @@ class ChestTest extends AnyFlatSpec {
       null, // empty slot
       null, // empty slot
       ItemStack(item2, 9),
+      null, // empty slot
       null, // empty slot
   ))
 
@@ -62,11 +63,22 @@ class ChestTest extends AnyFlatSpec {
 
   //TODO: csak az első előfordulást tölti fel jól és alakul maradék. a maradék nem kerül be
   it should "operator + same stack ABOVE capacity" in {
-    val testStack = ItemStack(Test("item2", 10), 5)
+    val testStack = ItemStack(Test("item2", 10), 7)
     val result = chest3 + testStack
-    val expected = (Chest("chest2", 16, Vector(ItemStack(Test("item2", 5), 5))), None)
+    val expected = (Chest("chest3",16,
+      Vector(
+        ItemStack(Test("item1",5),3),
+        ItemStack(Test("item2",10),10),
+        ItemStack(Test("item2",10),1),
+        null,
+        ItemStack(Test("item1",5),1),
+        null,
+        null,
+        ItemStack(Test("item2",10),10),
+        null,
+        null)),None)
+
     //assert(result == expected)
-    //assert(chest2.capacity - 1 == result._1.capacity)
     print(chest3 + testStack)
   }
 
@@ -113,6 +125,7 @@ class ChestTest extends AnyFlatSpec {
         null,
         null,
         ItemStack(Test("item2",10),9),
+        null,
         null)), Some(null))
     val result = chest3.swap(3, test)
     assert(result == expected)
@@ -123,7 +136,6 @@ class ChestTest extends AnyFlatSpec {
     val result = chest2 + testStack
     val expected = (Chest("chest2",16,Vector(ItemStack(Test("test",5),3))),None)
     assert(result == expected)
-    //assert(chest2.capacity - 1 == result._1.capacity)
   }
 
    it should "operator + no prev appearance, and empty slots" in {
@@ -138,10 +150,9 @@ class ChestTest extends AnyFlatSpec {
         ItemStack(Test("item1",5),1),
         null,
         null,
-        ItemStack(Test("item2",10),10),
+        ItemStack(Test("item2",10),9),
+        null,
         null)),None)
-     //assert(result == expected)
-    //assert(chest3.capacity - 1 == result._1.capacity)
-     print(chest3 + testStack)
+     assert(result == expected)
   }
 }
