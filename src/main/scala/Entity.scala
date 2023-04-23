@@ -20,14 +20,13 @@ trait Entity {
 case class Mob(
                 name: String,
                 id: String,
-                stats: EntityStats,
                 currentEffects: Vector[EffectDuration],
                 currentHP: Int,
                 position: Position
               ) extends Entity {
   override def baseStats: EntityStats = EntityStats(3, 3, 2, 75, 0) //mobok hp-ja nem regeneralodhat
   override def heal(hp: Int): Entity = {
-    if(currentHP + hp >= stats.maxHP) copy(currentHP = stats.maxHP)
+    if(currentHP + hp >= baseStats.maxHP) copy(currentHP = baseStats.maxHP)
     else copy(currentHP = currentHP + hp)
   }
 
@@ -54,7 +53,7 @@ case class Mob(
 
 
   override def applyEffects: EntityStats = ???
-  override def moveTo(position: Position): Unit = copy(position = position)
+  override def moveTo(pos: Position): Unit = copy(position = pos)
   override def tick: Option[Entity] = ???
 }
 
@@ -92,13 +91,31 @@ case class Player(
   val armorOnPlayer = Armor
 
 
-  override def baseStats: EntityStats = ???
-  override def heal(hp: Int): Entity = ???
-  override def takeDamage(hp: Int): Option[Entity] = ???
-  override def addEffect(effect: Effect, duration: Duration): Entity = ???
+  override def baseStats: EntityStats = EntityStats(15, 5, 1, 100, 5) //mobok hp-ja nem regeneralodhat
+
+  override def heal(hp: Int): Entity = {
+    if (currentHP + hp >= baseStats.maxHP) copy(currentHP = baseStats.maxHP)
+    else copy(currentHP = currentHP + hp)
+  }
+
+  override def takeDamage(hp: Int): Option[Entity] = {
+    if (currentHP - hp < 0) None
+    else Option(copy(currentHP = currentHP - hp))
+  }
+
+  override def addEffect(effect: Effect, duration: Duration): Entity = {
+    if (!currentEffects.exists(ed => ed.effect == effect))
+      copy(currentEffects = currentEffects.appended(EffectDuration(effect, duration)))
+
+    else {
+      //TODO: osszehasonlitani duration szintek szerint.
+      // ticksLeft legrövidebb (azonbelül is h mennyi tick, utána untilDeath és Permanent)
+      ???
+    }
+  }
   override def removeEffects(p: Effect => Boolean): Entity = ???
   override def applyEffects: EntityStats = ???
-  override def moveTo(position: Position): Unit = ???
+  override def moveTo(pos: Position): Unit = copy(position = pos)
   override def tick: Option[Entity] = ???
 }
 
