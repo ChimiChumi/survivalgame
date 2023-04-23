@@ -143,6 +143,13 @@ case class ItemStack(item: Item, quantity: Int) {
     }
 }
 
+/**
+ * Placable blocks
+ * @param id              name of the block (i.e: wood, stone, brick, etc.)
+ * @param maxStackSize    stackable sizes
+ */
+case class Blocks(id: String, override val maxStackSize: Int) extends Placable
+
 
 /**
  * Weapon item type providing defense. (i.e: Axe, Sword, etc.)
@@ -154,12 +161,8 @@ case class ItemStack(item: Item, quantity: Int) {
 case class Weapon(id: String, damage: Int) extends Item {
   override val maxStackSize: Int = 1
   require(damage > 0, "Damage value must be positive!")
-
-  def applyDamage(entity: Entity): Entity = ???
+  def equipWeapon(stats: EntityStats): EntityStats = stats.copy(attack = stats.attack + damage)
 }
-
-case class Test(id: String, override val maxStackSize: Int) extends Item
-
 
 /**
  * Armor item type providing defense. (i.e: Helmet, ChestPlate, etc.)
@@ -171,8 +174,7 @@ case class Test(id: String, override val maxStackSize: Int) extends Item
 case class Armor(id: String, defense: Int) extends Item {
   override val maxStackSize: Int = 1
   require(defense > 0, "Defense value must be positive!")
-
-  def applyDefense(entity: Entity): Entity = ???
+  def equipArmor(stats: EntityStats): EntityStats = stats.copy(defense = stats.defense + defense)
 }
 
 /**
@@ -183,8 +185,7 @@ case class Armor(id: String, defense: Int) extends Item {
  */
 case class Consumable(id: String, effects: Vector[Effect]) extends Item {
   override val maxStackSize: Int = 3 // random pre-defined number for consumable stack
-
-  def applyEffects(entity: Entity): Entity = ???
+  def applyEffects(stats: EntityStats): EntityStats = ???
 }
 
 /**
@@ -196,7 +197,7 @@ case class Consumable(id: String, effects: Vector[Effect]) extends Item {
 case class Equipment(id: String, effects: Vector[Effect]) extends Item {
   override val maxStackSize: Int = 1
 
-  def applyEffects(entity: Entity): Entity = ???
+  def applyEffects(stats: EntityStats): EntityStats = ???
 }
 
 /**
