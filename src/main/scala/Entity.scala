@@ -1,3 +1,4 @@
+import scala.collection.immutable._
 trait Entity {
   val name: String
   val id: String
@@ -24,13 +25,36 @@ case class Mob(
                 currentHP: Int,
                 position: Position
               ) extends Entity {
-  override def baseStats: EntityStats = ???
-  override def heal(hp: Int): Entity = ???
-  override def takeDamage(hp: Int): Option[Entity] = ???
-  override def addEffect(effect: Effect, duration: Duration): Entity = ???
-  override def removeEffects(p: Effect => Boolean): Entity = ???
+  override def baseStats: EntityStats = EntityStats(3, 3, 2, 75, 0) //mobok hp-ja nem regeneralodhat
+  override def heal(hp: Int): Entity = {
+    if(currentHP + hp >= stats.maxHP) copy(currentHP = stats.maxHP)
+    else copy(currentHP = currentHP + hp)
+  }
+
+  override def takeDamage(hp: Int): Option[Entity] = {
+    if(currentHP - hp < 0) None
+    else Option(copy(currentHP = currentHP - hp))
+  }
+
+  override def addEffect(effect: Effect, duration: Duration): Entity = {
+    if (!currentEffects.exists(ed => ed.effect == effect))
+        copy(currentEffects = currentEffects.appended(EffectDuration(effect, duration)))
+
+    else {
+      //TODO: osszehasonlitani duration szintek szerint.
+      // ticksLeft legrövidebb (azonbelül is h mennyi tick, utána untilDeath és Permanent)
+      ???
+    }
+  }
+
+  override def removeEffects(p: Effect => Boolean): Entity = {
+    val newEffects = currentEffects.filterNot(ed => p(ed.effect))
+    copy(currentEffects = newEffects)
+  }
+
+
   override def applyEffects: EntityStats = ???
-  override def moveTo(position: Position): Unit = ???
+  override def moveTo(position: Position): Unit = copy(position = position)
   override def tick: Option[Entity] = ???
 }
 
@@ -57,14 +81,16 @@ case class Player(
                 currentHP: Int,
                 position: Position,
                 capacity: Int,
-                inventory: Chest,
                 equipmentSlots: Chest,
-                weapon: Weapon,
-                armor: Armor,
                 onCursor: ItemStack,
                 respawnPosition: Position,
                 reachingDistance: Double
               ) extends Entity {
+
+  val inventory = new Chest(id, capacity, Vector[ItemStack](null))
+  val weaponOnPlayer = Weapon
+  val armorOnPlayer = Armor
+
 
   override def baseStats: EntityStats = ???
   override def heal(hp: Int): Entity = ???
@@ -91,6 +117,7 @@ case class EntityStats(
                         speed: Double,
                         maxHP: Int,
                         regeneration: Double
+
                       ) {
 
   /**
@@ -98,15 +125,15 @@ case class EntityStats(
    * @param effect which particular effect to-be applied on the Entity
    * @return an updated EntityStats
    */
-  private def applyEffect(effect: Effect): EntityStats = effect match {
+  def applyEffect(effect: Effect): EntityStats = effect match {
     case IncreaseDamage(value) => copy(attack = attack + value)
     case ScaleDefense(percentage) => copy(defense = (defense * percentage).toInt)
     case Poison(value) => copy(regeneration = regeneration - value)
-    case _ => this //
+    case _ => this
   }
 
   // it can be given a vector of effects and iterates through them applying them all
-  private def applyEffect(effects: Effect*): EntityStats =
+  def applyEffect(effects: Effect*): EntityStats =
     effects.foldLeft(this) {
       (stats, effect) => stats.applyEffect(effect)
     }
