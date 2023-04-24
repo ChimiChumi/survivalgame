@@ -162,6 +162,7 @@ case class Weapon(id: String, damage: Int) extends Item {
   override val maxStackSize: Int = 1
   require(damage > 0, "Damage value must be positive!")
   def equipWeapon(stats: EntityStats): EntityStats = stats.copy(attack = stats.attack + damage)
+  def unequipWeapon(stats: EntityStats): EntityStats = stats.copy(attack = stats.attack - damage)
 }
 
 /**
@@ -175,6 +176,7 @@ case class Armor(id: String, defense: Int) extends Item {
   override val maxStackSize: Int = 1
   require(defense > 0, "Defense value must be positive!")
   def equipArmor(stats: EntityStats): EntityStats = stats.copy(defense = stats.defense + defense)
+  def unequipArmor(stats: EntityStats): EntityStats = stats.copy(defense = stats.defense - defense)
 }
 
 /**
@@ -183,9 +185,8 @@ case class Armor(id: String, defense: Int) extends Item {
  * @param name    item name
  * @param effects possible effects
  */
-case class Consumable(id: String, effects: Vector[Effect]) extends Item {
+case class Consumable(id: String, effects: Vector[EffectDuration]) extends Item {
   override val maxStackSize: Int = 3 // random pre-defined number for consumable stack
-  def applyEffects(stats: EntityStats): EntityStats = ???
 }
 
 /**
@@ -194,10 +195,8 @@ case class Consumable(id: String, effects: Vector[Effect]) extends Item {
  * @param name    item name
  * @param effects possible effects
  */
-case class Equipment(id: String, effects: Vector[Effect]) extends Item {
+case class Equipment(id: String, effects: Vector[EffectDuration]) extends Item {
   override val maxStackSize: Int = 1
-
-  def applyEffects(stats: EntityStats): EntityStats = ???
 }
 
 /**
