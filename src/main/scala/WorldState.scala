@@ -89,8 +89,8 @@ case class WorldStateImpl(worldMap: WorldMap, requests: Seq[Request]) extends Wo
   def players: Vector[Player] = ???  // get the actual players present in the world
   def apply(x: Int, y: Int):Option[Placable] = ???  // get the position of a block if exists
   def apply(position: Position):Option[Placable] = ???  // similar as the previous
-  def width:Int = ???   // map width
-  def height:Int = ???  // map height
+  def width:Int = worldMap.map.length   // map width
+  def height:Int = worldMap.map(0).length  // map height
   def saveWorldState(worldState: WorldState, filePath: String): Unit = ??? // save WorldState object to JSON file
   def loadWorldState(filePath: String): Option[WorldState] = ??? // load WorldState object from a JSON file
 }

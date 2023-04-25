@@ -128,12 +128,17 @@ case class Player(
    * @return      added equipment effects to currentEffects vector and added equipment to equipmentslots
    */
   def equip(item: Equipment): Entity = {
+    /*
     item.effects
       .foldLeft(this)(
         (player, ed) => player.addEffect(ed).asInstanceOf[Player]
       )
       .copy(equipmentSlots = equipmentSlots + item)
+
+     */
+    ???
   }
+
 
   override def takeDamage(hp: Int): Option[Entity] = {
     if (currentHP - hp < 0) None
@@ -167,7 +172,20 @@ case class Player(
 
   override def moveTo(pos: Position): Unit = copy(position = pos)
 
-  override def tick: Option[Entity] = ???
+
+  override def tick: Option[Entity] = {
+    /*
+    if (currentHP == 0) None
+    else copy(
+      currentHP = heal(baseStats.regeneration), // mozog
+      currentEffects = currentEffects
+          .map(ed => ed.duration.tick) // tickeltettük a powerupokat
+          .filter(powerup => powerup.ticksLeft > 0) // ami lejárt, kidobjuk
+    )
+
+     */
+    ???
+  }
 }
 
 /**
@@ -184,7 +202,7 @@ case class EntityStats(
                         defense: Int,
                         speed: Double,
                         maxHP: Int,
-                        regeneration: Double
+                        regeneration: Int
                       ) {
 
   /**
