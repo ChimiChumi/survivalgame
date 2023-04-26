@@ -36,10 +36,10 @@ case class GameRules(itemTypes: Vector[Item], recipeTypes:Vector[Recipe]) {
     if (equipments.nonEmpty) Some(equipments) else None
   }
 
-  def materials: Option[Vector[Item]] = {
-    val inputItems = recipeTypes.flatMap( item =>  item.inputs.map(_.item))
-    val distinctItems = inputItems.distinct
-    if (distinctItems.forall(itemTypes.contains)) Some(distinctItems)
+  def ingredients: Option[Vector[Item]] = {
+    val distinctItems = recipeTypes.flatMap(_.inputs.map(_.item)).distinct
+    val missingItems = distinctItems.filterNot(itemTypes.contains)
+    if (missingItems.isEmpty) Some(distinctItems)
     else None
   }
 
