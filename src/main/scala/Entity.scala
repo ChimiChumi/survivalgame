@@ -20,7 +20,7 @@ trait Entity {
 
   def applyEffects: EntityStats // applying awaited effects, changing stats
 
-  def moveTo(position: Position) // change position on the map
+  def moveTo(position: Position): Entity // change position on the map
 
   def tick: Option[Entity] // clock, needed to check entity status after each tick
 }
@@ -29,11 +29,13 @@ trait Entity {
 case class Mob(
                 name: String,
                 id: String,
-                baseStats: EntityStats,
+                stats: EntityStats,
                 currentEffects: Vector[EffectDuration],
                 currentHP: Int,
                 position: Position
               ) extends Entity {
+
+  override def baseStats: EntityStats = ???
 
   override def heal(hp: Int): Entity = {
     if (currentHP + hp >= baseStats.maxHP) copy(currentHP = baseStats.maxHP)
@@ -69,7 +71,7 @@ case class Mob(
     baseStats
   }
 
-  override def moveTo(pos: Position): Unit = copy(position = pos)
+  override def moveTo(pos: Position): Entity = copy(position = pos)
 
   override def tick: Option[Entity] = ???
 }
@@ -93,11 +95,12 @@ case class Mob(
 case class Player(
                    name: String,
                    id: String,
+                   stats: EntityStats,
                    currentEffects: Vector[EffectDuration],
                    currentHP: Int,
                    position: Position,
                    capacity: Int,
-                   inventory: Int,
+                   inventory: Chest,
                    equipmentSlots: Chest,
                    onCursor: ItemStack,
                    respawnPosition: Position,
@@ -106,10 +109,16 @@ case class Player(
                    armorOnPlayer: Option[Armor]
                  ) extends Entity {
 
-  override def baseStats: EntityStats = EntityStats(15, 5, 1, 100, 5) //mobok hp-ja nem regeneralodhat
+  require(inventory.maxSlots == capacity, s"Inventory size has to match capacity! ($capacity)")
+  require(equipmentSlots.maxSlots <= 4, "The player cannot carry more than 4 equipments!")
+  require(equipmentSlots.items.forall(_.item.isInstanceOf[Equipment]), "The equipment slot can only contain equipments!")
 
-  override def heal(hp: Int): Entity = {
-    if (currentHP + hp >= baseStats.maxHP) copy(currentHP = baseStats.maxHP)
+  //TODO: megkerdezni
+  override def baseStats: EntityStats = ???
+
+  override def heal(hp: Int): Player = {
+    //TODO: tesztesettel kérdés
+    if (currentHP + hp >= stats.maxHP) copy(currentHP = stats.maxHP)
     else copy(currentHP = currentHP + hp)
   }
 
@@ -118,7 +127,7 @@ case class Player(
    * @param item to be consumed
    * @return added equipment effects to currentEffects vector
    */
-  def consume(item: Consumable): Entity = {
+  def consume(item: Consumable): Player = {
     item.effects.foldLeft(this)((player, ed) => player.addEffect(ed).asInstanceOf[Player])
   }
 
@@ -128,6 +137,7 @@ case class Player(
    * @return      added equipment effects to currentEffects vector and added equipment to equipmentslots
    */
   def equip(item: Equipment): Entity = {
+    //TODO: nem megy
     /*
     item.effects
       .foldLeft(this)(
@@ -170,7 +180,7 @@ case class Player(
     baseStats
   }
 
-  override def moveTo(pos: Position): Unit = copy(position = pos)
+  override def moveTo(pos: Position): Entity = copy(position = pos)
 
 
   override def tick: Option[Entity] = {

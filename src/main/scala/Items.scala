@@ -14,8 +14,8 @@ trait Placable extends Item
  * @param items       Currently stored items inside.
  */
 case class Chest(id: String, maxSlots: Int, items: Vector[ItemStack]) extends Placable {
-  require(maxSlots > 0, s"Chest '$id' capacity must be a positive number!")
-  require(items.length <= maxSlots, s"Chest '$id' cannot have more than $maxSlots items")
+  require(maxSlots > 0, s"The capacity for '$id' Chest must be a positive number! (given: $maxSlots)")
+  require(items.length <= maxSlots, s"The '$id' Chest cannot contain more than it's capacity: $maxSlots !")
 
   override val maxStackSize: Int = 5
 
@@ -116,7 +116,7 @@ case class Chest(id: String, maxSlots: Int, items: Vector[ItemStack]) extends Pl
  * @param count amount of the item
  */
 case class ItemStack(item: Item, quantity: Int) {
-  require(quantity > 0 && quantity <= item.maxStackSize, "The amount has to be greater than 0 and lower than a full stack!")
+  require(quantity > 0 && quantity <= item.maxStackSize, s"The quantity for ${item.id} has to be greater than 0 and lower than ${item.maxStackSize}!")
 
   def +(that: ItemStack): (ItemStack, Option[ItemStack]) = {
     if (this.item != that.item) {
@@ -171,7 +171,7 @@ case class Loot(id: String) extends Item{
  */
 case class Weapon(id: String, damage: Int) extends Item {
   override val maxStackSize: Int = 1
-  require(damage > 0, "Damage value must be positive!")
+  require(damage > 0, s"Weapon ($id) damage value must be positive! (current: $damage")
   def equipWeapon(stats: EntityStats): EntityStats = stats.copy(attack = stats.attack + damage)
   def unequipWeapon(stats: EntityStats): EntityStats = stats.copy(attack = stats.attack - damage)
 }
@@ -185,7 +185,7 @@ case class Weapon(id: String, damage: Int) extends Item {
  */
 case class Armor(id: String, defense: Int) extends Item {
   override val maxStackSize: Int = 1
-  require(defense > 0, "Defense value must be positive!")
+  require(defense > 0, s"Armor ($id) defense value must be positive! (current: $defense")
   def equipArmor(stats: EntityStats): EntityStats = stats.copy(defense = stats.defense + defense)
   def unequipArmor(stats: EntityStats): EntityStats = stats.copy(defense = stats.defense - defense)
 }
