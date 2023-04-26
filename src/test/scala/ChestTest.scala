@@ -2,26 +2,23 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 class ChestTest extends AnyFlatSpec {
 
-  val item1 = Blocks("brick")
-  val item2 = Blocks("wood")
-  val item3 = Blocks("stone")
+  val item1: Blocks     = Blocks("brick")
+  val item2: Blocks     = Blocks("wood")
+  val item3: Blocks     = Blocks("stone")
 
-  val stack1 = ItemStack(item1, 3)
-  //  val stack2 = ItemStack(item2, 5)
-
-  val chest1 = Chest("chest1", 16, Vector(ItemStack(item1, 3), ItemStack(item2, 5)))
-  val chest2 = Chest("chest2", 16, Vector())
-  val chest3 = Chest("chest3", 16, Vector(
-      ItemStack(item1, 3),
-      ItemStack(item2, 12),
-      null, // empty slot
-      null, // empty slot
-      ItemStack(item1, 1),
-      null, // empty slot
-      null, // empty slot
-      ItemStack(item2, 14),
-      null, // empty slot
-      null, // empty slot
+  val chest1: Chest     = Chest("chest1", 16, Vector(ItemStack(item1, 3), ItemStack(item2, 5)))
+  val chest2: Chest     = Chest("chest2", 16, Vector())
+  val chest3: Chest     = Chest("chest3", 16, Vector(
+    ItemStack(item1, 3),
+    ItemStack(item2, 12),
+    null, // empty slot
+    null, // empty slot
+    ItemStack(item1, 1),
+    null, // empty slot
+    null, // empty slot
+    ItemStack(item2, 14),
+    null, // empty slot
+    null, // empty slot
   ))
 
   "methods for non-empty chest or slot" should "isEmpty" in {
@@ -29,7 +26,7 @@ class ChestTest extends AnyFlatSpec {
   }
 
   it should "capacity" in {
-    assert(chest3.capacity == 14)
+    assert(chest3.capacity == 12) // number of free slots
   }
 
   it should "contains" in {
@@ -42,7 +39,7 @@ class ChestTest extends AnyFlatSpec {
   }
 
   it should "apply when index out of range" in {
-    assert(chest1.apply(3) == None)
+    assert(chest1.apply(3).isEmpty)
   }
 
   it should "count" in {
@@ -113,7 +110,7 @@ class ChestTest extends AnyFlatSpec {
   }
 
   it should "apply when vector is empty" in {
-    assert(chest2.apply(0) == None)
+    assert(chest2.apply(0).isEmpty)
   }
 
   it should "count" in {
