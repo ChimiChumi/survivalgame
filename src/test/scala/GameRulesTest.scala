@@ -14,8 +14,8 @@ class GameRulesTest extends AnyFlatSpec {
   val door: Blocks          = Blocks("door")
   val sword: Weapon         = item2
 
-  val doorRecipe:  Recipe         = Recipe(Vector[ItemStack](ItemStack(item5, 4), ItemStack(item4, 2)), door)
-  val swordRecipe: Recipe         = Recipe(Vector[ItemStack](ItemStack(loot1, 1), ItemStack(loot2, 2)), sword)
+  val doorRecipe:  Recipe   = Recipe(Vector[ItemStack](ItemStack(item5, 4), ItemStack(item4, 2)), door)
+  val swordRecipe: Recipe   = Recipe(Vector[ItemStack](ItemStack(loot1, 1), ItemStack(loot2, 2)), sword)
 
 
   val rules: GameRules = GameRules(
