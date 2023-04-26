@@ -13,15 +13,15 @@ trait Placable extends Item
  * @param maxCapacity The maximum capacity of items it can hold.
  * @param items       Currently stored items inside.
  */
-case class Chest(id: String, maxCapacity: Int, items: Vector[ItemStack]) extends Placable {
-  require(maxCapacity > 0, s"Chest '$id' capacity must be a positive number!")
-  require(items.length <= maxCapacity, s"Chest '$id' cannot have more than $maxCapacity items")
+case class Chest(id: String, maxSlots: Int, items: Vector[ItemStack]) extends Placable {
+  require(maxSlots > 0, s"Chest '$id' capacity must be a positive number!")
+  require(items.length <= maxSlots, s"Chest '$id' cannot have more than $maxSlots items")
 
   override val maxStackSize: Int = 5
 
   def isEmpty: Boolean = items.isEmpty
 
-  def capacity: Int = maxCapacity - items.count(_ != null) // number of available slots (i.e: [#] [#] [#] [_] [_])
+  def capacity: Int = maxSlots - items.count(_ != null) // number of available slots (i.e: [#] [#] [#] [_] [_])
 
   // asking for a specific stack on a given slot
   def apply(index: Int): Option[ItemStack] = {
@@ -30,7 +30,7 @@ case class Chest(id: String, maxCapacity: Int, items: Vector[ItemStack]) extends
   }
 
   def swap(index: Int, stack: ItemStack): (Chest, Option[ItemStack]) = {
-    if (index >= maxCapacity || index < 0) {
+    if (index >= maxSlots || index < 0) {
       (this, Some(stack))
     }
     else {
@@ -43,6 +43,7 @@ case class Chest(id: String, maxCapacity: Int, items: Vector[ItemStack]) extends
 
   def contains(item: Item): Boolean = items.exists(_.item == item)
 
+  // counts how many of the given item is present in the chest
   def count(item: Item): Int = items.foldLeft(0) { (sum, current) =>
     if (current != null && item == current.item)
       sum + current.quantity
@@ -53,7 +54,7 @@ case class Chest(id: String, maxCapacity: Int, items: Vector[ItemStack]) extends
   // adding stacks of items to the chest
   def +(stack: ItemStack): (Chest, Option[ItemStack]) = {
     if (this.isEmpty)
-      (Chest(id, maxCapacity, items.appended(stack)), None)
+      (Chest(id, maxSlots, items.appended(stack)), None)
 
     //if chest has items inside
     else {
@@ -90,7 +91,7 @@ case class Chest(id: String, maxCapacity: Int, items: Vector[ItemStack]) extends
 
           if (index >= 0) { // found an empty slot
             val newItems = currentItems.updated(index, ItemStack(stack.item, quantity))
-            return (Chest(id, maxCapacity, newItems), None)
+            return (Chest(id, maxSlots, newItems), None)
           }
           else
           // no empty slot but we still have remaining items
@@ -98,7 +99,7 @@ case class Chest(id: String, maxCapacity: Int, items: Vector[ItemStack]) extends
         }
       }
       // feltoltottuk az osszes stacket
-      (Chest(id, maxCapacity, currentItems), None)
+      (Chest(id, maxSlots, currentItems), None)
     }
   }
 }
@@ -148,7 +149,17 @@ case class ItemStack(item: Item, quantity: Int) {
  * @param id              name of the block (i.e: wood, stone, brick, etc.)
  * @param maxStackSize    stackable sizes
  */
-case class Blocks(id: String, override val maxStackSize: Int) extends Placable
+case class Blocks(id: String) extends Placable{
+  override val maxStackSize: Int = 16
+}
+
+/**
+ * Loot dropped by dead entity. It should get in the player's inventory.
+ * @param id    name of the item
+ */
+case class Loot(id: String) extends Item{
+  override val maxStackSize: Int = 12
+}
 
 
 /**
