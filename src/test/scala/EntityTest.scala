@@ -6,12 +6,12 @@ class EntityTest extends AnyFlatSpec {
     "player",
     "player1",
     EntityStats(5, 0, 1, 100, 5),
-    Vector(EffectDuration(null, null)),
+    Vector(),
     100,
     Position(0,0),
     10,
     Chest("inventory", 10, Vector[ItemStack]()),
-    Chest("equipments", 4, Vector[ItemStack]()),
+    Set(),
     null,
     Position(0,0),
     2,
@@ -30,29 +30,36 @@ class EntityTest extends AnyFlatSpec {
 
   "methods for players" should "heal" in {
     val test = player.copy(currentHP = 93)
-    // test.heal(5)
-    // test.heal(5)
-    // print(test.currentHP) TODO miert nem jo igy? nem frissul
-    print(test.heal(5).heal(5).currentHP)
+    print(test.heal(5).currentHP)
   }
 
-  it should "consume" in { //TODO nem megy addEffect miatt
+  it should "consume" in {
     val consumable1: Consumable = Consumable("rotten_meat", Vector(EffectDuration(Poison(10), TicksLeft(5))))
     val consumable2: Consumable = Consumable("spinach", Vector(EffectDuration(IncreaseDamage(10), Permanent)))
     print(player.consume(consumable1).consume(consumable2).currentEffects)
   }
 
-  it should "equip" in {  //TODO nem megy
-
+  it should "equip" in {
+    val equipment: Equipment = Equipment("teszt", Vector(EffectDuration(IncreaseDamage(10), Permanent)))
+    print(player.equip(equipment))
   }
 
   it should "takeDamage" in {
     print(player.takeDamage(25))
   }
 
-  it should "addEffect" in {  //TODO nem megy
-    val effect = EffectDuration(IncreaseDamage(5), Permanent)
-    print(player.addEffect(effect).currentEffects)
+  it should "addEffect" in {
+    val effect = EffectDuration(IncreaseDamage(5), TicksLeft(10))
+    val effect2 = EffectDuration(IncreaseDamage(5), UntilDeath)
+    val effect3 = EffectDuration(IncreaseDamage(5), TicksLeft(5))
+
+    print(player.addEffect(effect).addEffect(effect3).currentEffects)
+  }
+
+  it should "applyEffect" in {
+    val effect = EffectDuration(Poison(20), Permanent)
+
+    print(player.addEffect(effect).applyEffects)
   }
 
   it should "removeEffect" in {
@@ -64,5 +71,11 @@ class EntityTest extends AnyFlatSpec {
 
   it should "moveTo" in {
     print(player.moveTo(Position(1,2)).position)
+  }
+
+  it should "tick" in {
+    val effect = EffectDuration(Poison(20), TicksLeft(10))
+    val test = player.addEffect(effect)
+    println(test.tick)
   }
 }

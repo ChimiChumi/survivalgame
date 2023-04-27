@@ -208,6 +208,12 @@ case class Consumable(id: String, effects: Vector[EffectDuration]) extends Item 
  */
 case class Equipment(id: String, effects: Vector[EffectDuration]) extends Item {
   override val maxStackSize: Int = 1
+
+  override def equals(that: Any): Boolean =
+    that match {
+      case that: Equipment => that.id == this.id
+      case _ => false
+    }
 }
 
 /**
