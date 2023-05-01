@@ -5,15 +5,15 @@ class EntityTest extends AnyFlatSpec {
   val player: Player = Player(
     "player",
     "player1",
-    EntityStats(5, 0, 1, 100, 5),
+    EntityStats(5, 0, 1, 100, 5),  //eredeti stat
+    EntityStats(5, 0, 1, 91, 5),   //jelenlegi stat
     Vector(),
-    100,
-    Position(0,0),
+    Position(0, 0),
     10,
     Chest("inventory", 10, Vector[ItemStack]()),
     Set(),
     null,
-    Position(0,0),
+    Position(0, 0),
     2,
     None,
     None
@@ -22,15 +22,14 @@ class EntityTest extends AnyFlatSpec {
   val zombie = Mob(
     "zombie",
     "mob1",
-    EntityStats(10, 5, 2, 75, 0),
+    EntityStats(10, 5, 2, 75, 0),  // eredeti
+    EntityStats(10, 5, 2, 75, 0),  // jelenlegi
     Vector(EffectDuration(null, null)),
-    100,
     Position(0, 0),
   )
 
   "methods for players" should "heal" in {
-    val test = player.copy(currentHP = 93)
-    print(test.heal(5).currentHP)
+    print(player.heal(5).hp)
   }
 
   it should "consume" in {
@@ -70,12 +69,12 @@ class EntityTest extends AnyFlatSpec {
   }
 
   it should "moveTo" in {
-    print(player.moveTo(Position(1,2)).position)
+    print(player.moveTo(Position(1, 2)).position)
   }
 
   it should "tick" in {
     val effect = EffectDuration(Poison(20), TicksLeft(10))
     val test = player.addEffect(effect)
-    println(test.tick)
+    println(test.tick.get.tick.get.tick.get.tick)
   }
 }

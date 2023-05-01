@@ -25,16 +25,15 @@ case class EffectDuration(effect: Effect, duration: Duration)
 
 case class IncreaseDamage(value: Int) extends Effect {
   override def apply(stats: EntityStats): EntityStats = stats.copy(attack = stats.attack + value)
-  override def remove(stats: EntityStats): EntityStats = ???
+  override def remove(stats: EntityStats): EntityStats = stats.copy(attack = stats.attack - value)
 
 }
 case class ScaleDefense(percentage: Double) extends Effect {
   override def apply(stats: EntityStats): EntityStats = stats.copy(defense = stats.defense + math.floor((stats.defense * 100)/percentage).toInt )
-  override def remove(stats: EntityStats): EntityStats = ???
+  override def remove(stats: EntityStats): EntityStats = stats.copy(defense = stats.defense - math.floor((stats.defense * 100)/percentage).toInt )
 
 }
 case class Poison(value: Int) extends Effect{
   override def apply(stats: EntityStats): EntityStats = stats.copy(regeneration = stats.regeneration - value)
-  override def remove(stats: EntityStats): EntityStats = ???
-
+  override def remove(stats: EntityStats): EntityStats = stats.copy(regeneration = stats.regeneration + value)
 }

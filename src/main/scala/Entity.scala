@@ -5,12 +5,13 @@ trait Entity {
   val name: String
   val id: String
   val currentEffects: Vector[EffectDuration] // pair of effects and duration
-  val currentHP: Int
+  val currentStats: EntityStats
+  val baseStats: EntityStats
   val position: Position
 
-  def heal(hp: Int): Entity // increase hp
+  def heal(hp: Int): EntityStats // increase hp
 
-  def takeDamage(hp: Int): Option[Entity] // lower hp
+  def takeDamage(hp: Int): Option[EntityStats] // lower hp
 
   def addEffect(ed: EffectDuration): Entity // placing effects on entity
 
@@ -28,20 +29,20 @@ case class Mob(
                 name: String,
                 id: String,
                 baseStats: EntityStats,
+                currentStats: EntityStats,
                 currentEffects: Vector[EffectDuration],
-                currentHP: Int,
                 position: Position
               ) extends Entity {
 
 
-  override def heal(hp: Int): Entity = {
-    if (currentHP + hp >= baseStats.maxHP) copy(currentHP = baseStats.maxHP)
-    else copy(currentHP = currentHP + hp)
+  override def heal(hp: Int): EntityStats = {
+    if (currentStats.hp + hp >= baseStats.hp) currentStats.copy(hp = baseStats.hp)
+    else currentStats.copy(hp = currentStats.hp + hp)
   }
 
-  override def takeDamage(hp: Int): Option[Entity] = {
-    if (currentHP - hp < 0) None
-    else Option(copy(currentHP = currentHP - hp))
+  override def takeDamage(hp: Int): Option[EntityStats] = {
+    if (currentStats.hp - hp < 0) None
+    else Option(currentStats.copy(hp = currentStats.hp - hp))
   }
 
   override def addEffect(ed: EffectDuration): Entity = {
@@ -60,6 +61,9 @@ case class Mob(
 
   override def removeEffects(p: Effect => Boolean): Entity = {
     val newEffects = currentEffects.filterNot(ed => p(ed.effect))
+
+
+
     copy(currentEffects = newEffects)
   }
 
@@ -71,10 +75,10 @@ case class Mob(
   override def moveTo(pos: Position): Entity = copy(position = pos)
 
   override def tick: Option[Entity] = {
-    if (currentHP <= 0) None
+    if (currentStats.hp <= 0) None
 
     else {
-      val temp = copy(baseStats = this.applyEffects)
+      val temp = copy(currentStats = this.applyEffects)
 
       val newCurrentEffect = temp.currentEffects.zipWithIndex.foldLeft(temp.currentEffects)((currentEffects, tupleEd) => {
         tupleEd._1.duration match {
@@ -90,33 +94,33 @@ case class Mob(
         }
       })
 
-      Some(copy(currentHP = temp.heal(temp.baseStats.regeneration).currentHP, currentEffects = newCurrentEffect))
+      Some(copy(currentStats = temp.heal(temp.baseStats.regeneration), currentEffects = newCurrentEffect))
     }
   }
 }
 
 /**
  *
- * @param name             player name
- * @param id               unique player id
- * @param currentEffects   current effects on the player
- * @param currentHP        current hp of the player
- * @param position         current position of the player
- * @param capacity         inventory size of the player
- * @param inventory        current empty inventory
- * @param equipmentSlots   dedicated slots for equipment
- * @param weapon           dedicated slot for weapon
- * @param armor            dedicated slot for armor
- * @param onCursor         temporary storage of items currently being moved around between player and Chest
- * @param respawnPosition  Coordinates where player will respawn after death
- * @param reachingDistance Blocks between the player and interaction
+ * @param ??? player name
+ * @param ??? unique player id
+ * @param ??? current effects on the player
+ * @param ??? current hp of the player
+ * @param ??? current position of the player
+ * @param ??? inventory size of the player
+ * @param ??? current empty inventory
+ * @param ??? dedicated slots for equipment
+ * @param ??? dedicated slot for weapon
+ * @param ??? dedicated slot for armor
+ * @param ??? temporary storage of items currently being moved around between player and Chest
+ * @param ??? Coordinates where player will respawn after death
+ * @param ??? Blocks between the player and interaction
  */
 case class Player(
                    name: String,
                    id: String,
                    baseStats: EntityStats,
+                   currentStats: EntityStats,
                    currentEffects: Vector[EffectDuration],
-                   currentHP: Int,
                    position: Position,
                    capacity: Int,
                    inventory: Chest,
@@ -131,9 +135,9 @@ case class Player(
   require(inventory.maxSlots == capacity, s"Inventory size has to match capacity! ($capacity)")
   require(equipmentSlots.size <= 4, "The player cannot carry more than 4 equipments!")
 
-  override def heal(hp: Int): Entity = {
-    if (currentHP + hp >= baseStats.maxHP) copy(currentHP = baseStats.maxHP)
-    else copy(currentHP = currentHP + hp)
+  override def heal(hp: Int): EntityStats = {
+    if (currentStats.hp + hp >= baseStats.hp) currentStats.copy(hp = baseStats.hp)
+    else currentStats.copy(hp = currentStats.hp + hp)
   }
 
   /**
@@ -158,9 +162,9 @@ case class Player(
     }
   }
 
-  override def takeDamage(hp: Int): Option[Entity] = {
-    if (currentHP - hp < 0) None
-    else Option(copy(currentHP = currentHP - hp))
+  override def takeDamage(hp: Int): Option[EntityStats] = {
+    if (currentStats.hp - hp < 0) None
+    else Option(currentStats.copy(hp = currentStats.hp - hp))
   }
 
   override def addEffect(ed: EffectDuration): Entity = {
@@ -186,15 +190,16 @@ case class Player(
     currentEffects.foldLeft(baseStats)((stat, ed) => ed.effect.apply(stat))
   }
 
-  override def moveTo(pos: Position): Entity = copy(position = pos)
+  override def moveTo(pos: Position): Entity = copy(position = pos) //TODO worldstate
 
   override def tick: Option[Entity] = {
-    if (currentHP <= 0) None
+    if (currentStats.hp <= 0) {
+      //TODO untilDeath kivenni
+      None
+    }
 
     else {
-      val temp = copy(baseStats = this.applyEffects)
-
-      val newCurrentEffect = temp.currentEffects.zipWithIndex.foldLeft(temp.currentEffects)((currentEffects, tupleEd) => {
+      val newCurrentEffect = currentEffects.zipWithIndex.foldLeft(currentEffects)((currentEffects, tupleEd) => {
         tupleEd._1.duration match {
           case left: TicksLeft =>
             val remainingTicks = left.getRemainingTicks
@@ -202,13 +207,16 @@ case class Player(
               removeEffects(effect => tupleEd._1.effect == effect).currentEffects
             }
             else {
-              temp.currentEffects.updated(tupleEd._2, tupleEd._1.copy(duration = remainingTicks.get))
+              currentEffects.updated(tupleEd._2, tupleEd._1.copy(duration = remainingTicks.get))
             }
           case _ => currentEffects
         }
       })
+      val temp = copy(currentEffects = newCurrentEffect)
+      val stats = temp.applyEffects
+      val healed = temp.heal(stats.regeneration)
 
-      Some(copy(currentHP = temp.heal(temp.baseStats.regeneration).currentHP, currentEffects = newCurrentEffect))
+      Some(copy(currentStats = stats.copy(hp = healed.hp), currentEffects = newCurrentEffect))
     }
   }
 
@@ -227,7 +235,7 @@ case class EntityStats(
                         attack: Int,
                         defense: Int,
                         speed: Double,
-                        maxHP: Int,
+                        hp: Int,
                         regeneration: Int
                       )
 
