@@ -5,9 +5,9 @@ class EntityTest extends AnyFlatSpec {
   val player: Player = Player(
     "player",
     "player1",
-    EntityStats(5, 0, 1, 100, 5),  //eredeti stat
-    EntityStats(5, 0, 1, 100, 5),   //jelenlegi stat
-    Vector(),
+    EntityStats(5, 0, 1, 100, 5),   //eredeti stat
+    EntityStats(5, 0, 1, 100, 5),   //aktuális stat
+    Vector(EffectDuration(IncreaseDamage(5), TicksLeft(5))),
     Position(0, 0),
     10,
     Chest("inventory", 10, Vector[ItemStack]()),
@@ -23,61 +23,90 @@ class EntityTest extends AnyFlatSpec {
     "zombie",
     "mob1",
     EntityStats(10, 5, 2, 75, 0),  // eredeti
-    EntityStats(10, 5, 2, 75, 0),  // jelenlegi
+    EntityStats(10, 5, 2, 75, 0),  // aktuális
     Vector(EffectDuration(null, null)),
     Position(0, 0),
   )
 
   "methods for players" should "heal" in {
-    print(player.heal(5).hp)
+    val testStats = player.currentStats.copy(hp = 45)
+    val test = player.copy(currentStats = testStats)
+    val expected = 70
+    val result = test.heal(25).hp
+    assert(expected == result)
   }
 
-  it should "consume" in {
-    val consumable1: Consumable = Consumable("rotten_meat", Vector(EffectDuration(Poison(10), TicksLeft(5))))
-    val consumable2: Consumable = Consumable("spinach", Vector(EffectDuration(IncreaseDamage(10), Permanent)))
-    print(player.consume(consumable1).consume(consumable2).currentEffects)
+  it should "overheal" in {
+    val testStats = player.currentStats.copy(hp = 45)
+    val test = player.copy(currentStats = testStats)
+    val expected = player.baseStats.hp // possible maxHP
+    val result = test.heal(60).hp
+    assert(expected == result)
   }
 
   it should "equip" in {
-    val equipment: Equipment = Equipment("teszt", Vector(EffectDuration(IncreaseDamage(10), Permanent)))
-    print(player.equip(equipment))
+    val equipment1: Equipment = Equipment("EQUIP ME!", Vector(EffectDuration(IncreaseDamage(10), Permanent)))
+    val result = player.equip(equipment1).get._1.asInstanceOf[Player].equipmentSlots
+    val expected = Set(equipment1)
+    assert(result == expected)
+  }
+
+  it should "equiped already" in {
+    val equipment1: Equipment = Equipment("EQUIP ME!", Vector(EffectDuration(IncreaseDamage(10), Permanent)))
+    val equipment2: Equipment = Equipment("EQUIP ME!", Vector(EffectDuration(IncreaseDamage(5), UntilDeath)))
+    val test = player.equip(equipment1).get._1.asInstanceOf[Player]
+    val result = test.equip(equipment2).get._2
+    assert(result == equipment2)
   }
 
   it should "takeDamage" in {
-    print(player.takeDamage(25))
+    val result = player.takeDamage(25).get.hp
+    val expected = 75
+    assert(result == expected)
   }
 
   it should "addEffect" in {
-    val effect = EffectDuration(IncreaseDamage(5), TicksLeft(10))
-    val effect2 = EffectDuration(IncreaseDamage(5), UntilDeath)
-    val effect3 = EffectDuration(IncreaseDamage(5), TicksLeft(5))
+    val effect1 = EffectDuration(IncreaseDamage(5), TicksLeft(10))
+    val effect2 = EffectDuration(Poison(5), TicksLeft(7))
+    val effect3 = EffectDuration(Poison(5), TicksLeft(15))
+    val effect4 = EffectDuration(IncreaseDamage(5), Permanent)
+    val result = player.addEffect(effect1).addEffect(effect2).addEffect(effect3).addEffect(effect4).currentEffects
+    val expected = Vector(effect4, effect3)
 
-    print(player.addEffect(effect).addEffect(effect3).currentEffects)
+    assert(result == expected)
   }
 
   it should "applyEffect" in {
     val effect = EffectDuration(Poison(20), Permanent)
-
-    print(player.addEffect(effect).applyEffects)
+    val effect2 = EffectDuration(IncreaseDamage(7), UntilDeath)
+    val result = player.addEffect(effect).addEffect(effect2).applyEffects
+    val expected = EntityStats(17,0,1.0,100,-20)
+    assert(result == expected)
   }
 
   it should "removeEffect" in {
     val effect1 = EffectDuration(IncreaseDamage(5), Permanent)
-    val effect2 = EffectDuration(Poison(5), Permanent)
-    val test = player.copy(currentEffects = Vector[EffectDuration](effect1, effect2))
-    print(test.removeEffects(_.isInstanceOf[IncreaseDamage]).currentEffects)
+    val effect2 = EffectDuration(Poison(20), UntilDeath)
+    val test = player.addEffect(effect1).addEffect(effect2)
+    val result = test.removeEffects(_.isInstanceOf[Poison]).currentEffects
+    val expected = Vector(effect1)
+    assert(result == expected)
   }
 
   it should "moveTo" in {
-    print(player.moveTo(Position(1, 2)).position)
+    val result = player.moveTo(Position(1, 2)).position
+    val expected = Position(1.0,2.0)
+    assert(result == expected)
   }
 
   it should "tick" in {
-    val effect = EffectDuration(Poison(20), TicksLeft(3))
+    val effect1 = EffectDuration(Poison(20), TicksLeft(3))
     val effect2 = EffectDuration(IncreaseDamage(15), TicksLeft(7))
-
-
-    val test = player.addEffect(effect2).addEffect(effect)
+    val test = player.addEffect(effect1).addEffect(effect2)
     println(test.tick.get.tick.get.tick.get.tick.get.tick.get.tick.get.tick.get.tick)
+    /*  after 3 ticks, HP is decreased by 60
+        in the upcoming 5 ticks, HP is starting to regenerate in every tick by baseStats.regeneration
+        after 8 ticks, both effect1 and effect 2 expired, hp is regenerated by 5 * 5 = 25 --> hp = 65
+     */
   }
 }
