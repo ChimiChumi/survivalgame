@@ -47,12 +47,11 @@ case object Permanent extends Duration{
 object DurationOrdering extends Ordering[Duration] {
   def compare(a: Duration, b: Duration): Int = {
     val res = a.priority.compare(b.priority)
-
-    if(res == 0 && a.priority == Priority.TicksLeft){
-      val ticksA = a.asInstanceOf[TicksLeft].ticks
-      val ticksB = b.asInstanceOf[TicksLeft].ticks
-      return ticksB - ticksA
+    if (res == 0 && a.priority == Priority.TicksLeft) {
+      a.asInstanceOf[TicksLeft].ticks.compareTo(b.asInstanceOf[TicksLeft].ticks)
     }
-    res
+    else {
+      res
+    }
   }
 }
