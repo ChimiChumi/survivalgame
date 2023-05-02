@@ -34,6 +34,6 @@ case class ScaleDefense(percentage: Double) extends Effect {
 
 }
 case class Poison(value: Int) extends Effect{
-  override def apply(stats: EntityStats): EntityStats = stats.copy(regeneration = stats.regeneration - value)
-  override def remove(stats: EntityStats): EntityStats = stats.copy(regeneration = stats.regeneration + value)
+  override def apply(stats: EntityStats): EntityStats = stats.copy(regeneration = -value)
+  override def remove(stats: EntityStats): EntityStats = stats.copy(regeneration = stats.regeneration)
 }

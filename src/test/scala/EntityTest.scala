@@ -6,7 +6,7 @@ class EntityTest extends AnyFlatSpec {
     "player",
     "player1",
     EntityStats(5, 0, 1, 100, 5),  //eredeti stat
-    EntityStats(5, 0, 1, 91, 5),   //jelenlegi stat
+    EntityStats(5, 0, 1, 100, 5),   //jelenlegi stat
     Vector(),
     Position(0, 0),
     10,
@@ -73,8 +73,11 @@ class EntityTest extends AnyFlatSpec {
   }
 
   it should "tick" in {
-    val effect = EffectDuration(Poison(20), TicksLeft(10))
-    val test = player.addEffect(effect)
-    println(test.tick.get.tick.get.tick.get.tick)
+    val effect = EffectDuration(Poison(20), TicksLeft(3))
+    val effect2 = EffectDuration(IncreaseDamage(15), TicksLeft(7))
+
+
+    val test = player.addEffect(effect2).addEffect(effect)
+    println(test.tick.get.tick.get.tick.get.tick.get.tick.get.tick.get.tick.get.tick)
   }
 }

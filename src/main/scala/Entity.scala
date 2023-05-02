@@ -197,21 +197,22 @@ case class Player(
       //TODO untilDeath kivenni
       None
     }
-
     else {
-      val newCurrentEffect = currentEffects.zipWithIndex.foldLeft(currentEffects)((currentEffects, tupleEd) => {
-        tupleEd._1.duration match {
-          case left: TicksLeft =>
-            val remainingTicks = left.getRemainingTicks
-            if (remainingTicks.isEmpty) {
-              removeEffects(effect => tupleEd._1.effect == effect).currentEffects
-            }
-            else {
-              currentEffects.updated(tupleEd._2, tupleEd._1.copy(duration = remainingTicks.get))
-            }
-          case _ => currentEffects
-        }
-      })
+      val (remainingEffects, indicesToRemove) = currentEffects.zipWithIndex.foldLeft((currentEffects, Seq.empty[Int])) {
+        case ((effects, toRemove), (effect, index)) =>
+          effect.duration match {
+            case left: TicksLeft =>
+              val remainingTicks = left.getRemainingTicks
+              if (remainingTicks.isEmpty) {
+                (effects, toRemove :+ index)
+              } else {
+                (effects.updated(index, effect.copy(duration = remainingTicks.get)), toRemove)
+              }
+            case _ => (effects, toRemove)
+          }
+      }
+
+      val newCurrentEffect = remainingEffects.filterNot(effect => indicesToRemove.contains(currentEffects.indexOf(effect)))
       val temp = copy(currentEffects = newCurrentEffect)
       val stats = temp.applyEffects
       val healed = temp.heal(stats.regeneration)
