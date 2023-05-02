@@ -19,11 +19,11 @@ class EntityTest extends AnyFlatSpec {
     None
   )
 
-  val zombie = Mob(
+  val zombie: Mob = Mob(
     "zombie",
     "mob1",
-    EntityStats(10, 5, 2, 75, 0),  // eredeti
-    EntityStats(10, 5, 2, 75, 0),  // aktuális
+    EntityStats(10, 5, 2, 75, 0), // eredeti
+    EntityStats(10, 5, 2, 75, 0), // aktuális
     Vector(EffectDuration(null, null)),
     Position(0, 0),
   )
@@ -88,8 +88,8 @@ class EntityTest extends AnyFlatSpec {
     val effect1 = EffectDuration(IncreaseDamage(5), Permanent)
     val effect2 = EffectDuration(Poison(20), UntilDeath)
     val test = player.addEffect(effect1).addEffect(effect2)
-    val result = test.removeEffects(_.isInstanceOf[Poison]).currentEffects
-    val expected = Vector(effect1)
+    val result = test.removeEffects(_.effect == effect1.effect).currentEffects
+    val expected = Vector(effect2)
     assert(result == expected)
   }
 

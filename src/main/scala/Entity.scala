@@ -12,7 +12,7 @@ trait Entity {
   def heal(hp: Int): EntityStats // increase hp
   def takeDamage(hp: Int): Option[EntityStats] // lower hp
   def addEffect(ed: EffectDuration): Entity // placing effects on entity
-  def removeEffects(p: Effect => Boolean): Entity // removing effects from entity
+  def removeEffects(p: EffectDuration => Boolean): Entity // removing effects from entity
   def applyEffects: EntityStats // applying awaited effects, changing stats
   def moveTo(position: Position): Entity // change position on the map
   def tick: Option[Entity] // clock, needed to check entity status after each tick
@@ -82,8 +82,8 @@ case class Mob(
    * @param p    predicate to be truthy
    * @return     updated currentEffects Vector, with the effect removed
    */
-  override def removeEffects(p: Effect => Boolean): Entity = {
-    val newEffects = currentEffects.filterNot(ed => p(ed.effect))
+  override def removeEffects(p: EffectDuration => Boolean): Entity = {
+    val newEffects = currentEffects.filterNot(ed => p(ed))
     copy(currentEffects = newEffects)
   }
 
@@ -100,7 +100,7 @@ case class Mob(
    * @param pos   x,y coordinates
    * @return      New position
    */
-  override def moveTo(pos: Position): Entity = copy(position = pos) //TODO worldstate
+  override def moveTo(pos: Position): Entity = copy(position = pos)
 
   /**
    * This represents the lifecycle of the game.
@@ -110,7 +110,6 @@ case class Mob(
    */
   override def tick: Option[Entity] = {
     if (currentStats.hp <= 0) {
-      //TODO untilDeath kivenni
       None
     }
     else {
@@ -194,7 +193,6 @@ case class Player(
    *
    */
   def equip(item: Equipment): Option[(Entity, Equipment)] = {
-    // TODO: ha slotban van az equipment akkor effekt, ha nincs a slotban akkor levesszuk az effektet
     if (equipmentSlots.contains(item)) Some((this, item))
     else {
       Some(item.effects.foldLeft(this)((player, ed) => player.addEffect(ed).asInstanceOf[Player]).copy(equipmentSlots = equipmentSlots + item), null)
@@ -241,8 +239,8 @@ case class Player(
    * @param p predicate to be truthy
    * @return updated currentEffects Vector, with the effect removed
    */
-  override def removeEffects(p: Effect => Boolean): Entity = {
-    val newEffects = currentEffects.filterNot(ed => p(ed.effect))
+  override def removeEffects(p: EffectDuration => Boolean): Entity = {
+    val newEffects = currentEffects.filterNot(ed => p(ed))
     copy(currentEffects = newEffects)
   }
 
@@ -261,7 +259,7 @@ case class Player(
    * @param pos x,y coordinates
    * @return New position
    */
-  override def moveTo(pos: Position): Entity = copy(position = pos) //TODO worldstate
+  override def moveTo(pos: Position): Entity = copy(position = pos)
 
   /**
    * This represents the lifecycle of the game.
@@ -272,7 +270,6 @@ case class Player(
    */
   override def tick: Option[Entity] = {
     if (currentStats.hp <= 0) {
-      //TODO untilDeath kivenni
       None
     }
     else {
