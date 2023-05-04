@@ -95,7 +95,7 @@ class EntityTest extends AnyFlatSpec {
 
   it should "moveTo" in {
     val result = player.moveTo(Position(1, 2)).position
-    val expected = Position(1.0,2.0)
+    val expected = Position(1,2)
     assert(result == expected)
   }
 

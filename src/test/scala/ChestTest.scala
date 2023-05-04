@@ -2,9 +2,9 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 class ChestTest extends AnyFlatSpec {
 
-  val item1: Blocks     = Blocks("brick")
-  val item2: Blocks     = Blocks("wood")
-  val item3: Blocks     = Blocks("stone")
+  val item1: Block     = Block("brick")
+  val item2: Block     = Block("wood")
+  val item3: Block     = Block("stone")
 
   val chest1: Chest     = Chest("chest1", 16, Vector(ItemStack(item1, 3), ItemStack(item2, 5)))
   val chest2: Chest     = Chest("chest2", 16, Vector())
@@ -34,7 +34,7 @@ class ChestTest extends AnyFlatSpec {
   }
 
   it should "apply when index in range" in {
-    val expected = Some(ItemStack(Blocks("wood"), 5))
+    val expected = Some(ItemStack(Block("wood"), 5))
     assert(chest1.apply(1) == expected)
   }
 
@@ -47,43 +47,43 @@ class ChestTest extends AnyFlatSpec {
   }
 
   it should "swap with present stack" in {
-    val stack3 = ItemStack(Blocks("SWAP_ME!"), 3)
-    val expected = (Chest("chest1", 16, Vector(ItemStack(Blocks("brick"), 3), ItemStack(Blocks("SWAP_ME!"), 3))), Some(ItemStack(Blocks("wood"), 5)))
+    val stack3 = ItemStack(Block("SWAP_ME!"), 3)
+    val expected = (Chest("chest1", 16, Vector(ItemStack(Block("brick"), 3), ItemStack(Block("SWAP_ME!"), 3))), Some(ItemStack(Block("wood"), 5)))
     val result = chest1.swap(1, stack3)
     assert(result == expected)
   }
 
   it should "operator +, same stack BELOW capacity" in {
-    val testStack = ItemStack(Blocks("wood"), 2)
+    val testStack = ItemStack(Block("wood"), 2)
     val result = chest3 + testStack
     val expected = (Chest("chest3", 16,
       Vector(
-        ItemStack(Blocks("brick"), 3),
-        ItemStack(Blocks("wood"), 14),
+        ItemStack(Block("brick"), 3),
+        ItemStack(Block("wood"), 14),
         null,
         null,
-        ItemStack(Blocks("brick"), 1),
+        ItemStack(Block("brick"), 1),
         null,
         null,
-        ItemStack(Blocks("wood"), 14),
+        ItemStack(Block("wood"), 14),
         null,
         null)), None)
     assert(result == expected)
   }
 
   it should "operator + same stack ABOVE capacity" in {
-    val testStack = ItemStack(Blocks("wood"), 10)
+    val testStack = ItemStack(Block("wood"), 10)
     val result = chest3 + testStack
     val expected = (Chest("chest3",16,
       Vector(
-        ItemStack(Blocks("brick"),3),
-        ItemStack(Blocks("wood"),16),
-        ItemStack(Blocks("wood"),4),
+        ItemStack(Block("brick"),3),
+        ItemStack(Block("wood"),16),
+        ItemStack(Block("wood"),4),
         null,
-        ItemStack(Blocks("brick"),1),
+        ItemStack(Block("brick"),1),
         null,
         null,
-        ItemStack(Blocks("wood"),16),
+        ItemStack(Block("wood"),16),
         null,
         null)),None)
 
@@ -122,17 +122,17 @@ class ChestTest extends AnyFlatSpec {
   }
 
   it should "swap, when empty slot" in {
-    val test = ItemStack(Blocks("SWAP_ME!"), 3)
+    val test = ItemStack(Block("SWAP_ME!"), 3)
     val expected = (Chest("chest3", 16,
       Vector(
-        ItemStack(Blocks("brick"),3),
-        ItemStack(Blocks("wood"),5),
+        ItemStack(Block("brick"),3),
+        ItemStack(Block("wood"),5),
         null,
-        ItemStack(Blocks("SWAP_ME!"),3),
-        ItemStack(Blocks("brick"),1),
+        ItemStack(Block("SWAP_ME!"),3),
+        ItemStack(Block("brick"),1),
         null,
         null,
-        ItemStack(Blocks("wood"),9),
+        ItemStack(Block("wood"),9),
         null,
         null)), Some(null))
     val result = chest3.swap(3, test)
@@ -140,25 +140,25 @@ class ChestTest extends AnyFlatSpec {
   }
 
   it should "operator + and empty chest" in {
-    val testStack = ItemStack(Blocks("stone"), 3)
+    val testStack = ItemStack(Block("stone"), 3)
     val result = chest2 + testStack
-    val expected = (Chest("chest2",16,Vector(ItemStack(Blocks("stone"),3))),None)
+    val expected = (Chest("chest2",16,Vector(ItemStack(Block("stone"),3))),None)
     assert(result == expected)
   }
 
    it should "operator + no prev appearance, and empty slots" in {
-    val testStack = ItemStack(Blocks("stone"), 3)
+    val testStack = ItemStack(Block("stone"), 3)
     val result = chest3 + testStack
     val expected = (Chest("chest3",16,
       Vector(
-        ItemStack(Blocks("brick"),3),
-        ItemStack(Blocks("wood"),5),
-        ItemStack(Blocks("stone"),3),
+        ItemStack(Block("brick"),3),
+        ItemStack(Block("wood"),5),
+        ItemStack(Block("stone"),3),
         null,
-        ItemStack(Blocks("brick"),1),
+        ItemStack(Block("brick"),1),
         null,
         null,
-        ItemStack(Blocks("wood"),9),
+        ItemStack(Block("wood"),9),
         null,
         null)),None)
      assert(result == expected)

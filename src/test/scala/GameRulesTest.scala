@@ -4,14 +4,14 @@ class GameRulesTest extends AnyFlatSpec {
   val item1: Armor          = Armor("shield", 5)
   val item2: Weapon         = Weapon("sword", 10)
   val item3: Weapon         = Weapon("axe", 3)
-  val item4: Blocks         = Blocks("stone")
-  val item5: Blocks         = Blocks("wood")
+  val item4: Block         = Block("stone")
+  val item5: Block         = Block("wood")
   val item6: Equipment      = Equipment("lasergoogles", Vector(EffectDuration(ScaleDefense(5), UntilDeath)))
 
   val loot1: Loot           = Loot("stick")
   val loot2: Loot           = Loot("iron")
 
-  val door: Blocks          = Blocks("door")
+  val door: Block          = Block("door")
   val sword: Weapon         = item2
 
   val doorRecipe:  Recipe   = Recipe(Vector[ItemStack](ItemStack(item5, 4), ItemStack(item4, 2)), door)
@@ -30,8 +30,8 @@ class GameRulesTest extends AnyFlatSpec {
         Armor("shield",5),
         Weapon("sword",10),
         Weapon("axe",3),
-        Blocks("stone"),
-        Blocks("wood"),
+        Block("stone"),
+        Block("wood"),
         Equipment("lasergoogles",Vector(EffectDuration(ScaleDefense(5.0),UntilDeath))),
         Loot("stick"), Loot("iron")
       ))
@@ -41,7 +41,7 @@ class GameRulesTest extends AnyFlatSpec {
 
   it should "getPlacable" in {
     val res = rules.getPlaceables
-    val expected = Some(Vector(Blocks("stone"), Blocks("wood")))
+    val expected = Some(Vector(Block("stone"), Block("wood")))
     assert(res == expected)
   }
 
@@ -72,13 +72,13 @@ class GameRulesTest extends AnyFlatSpec {
 
   it should "crafting ingredients" in {
     val res = rules.ingredients
-    val expected = Some(Vector(Blocks("wood"), Blocks("stone"), Loot("stick"), Loot("iron")))
+    val expected = Some(Vector(Block("wood"), Block("stone"), Loot("stick"), Loot("iron")))
     assert(res == expected)
   }
 
   it should "crafting results" in {
     val res = rules.craftables
-    val expected = Some(Vector(Blocks("door"), Weapon("sword",10)))
+    val expected = Some(Vector(Block("door"), Weapon("sword",10)))
     assert(res == expected)
   }
 }
