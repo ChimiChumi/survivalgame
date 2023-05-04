@@ -51,6 +51,13 @@ class EntityTest extends AnyFlatSpec {
     assert(result == expected)
   }
 
+  it should "consume" in {
+    val test = player.copy(onCursor = ItemStack(Consumable("potion", Vector(EffectDuration(IncreaseDamage(5), TicksLeft(3)))), 3))
+    val result = test.consume.onCursor
+    val expected = ItemStack(Consumable("potion",Vector(EffectDuration(ScaleDefense(20.0),TicksLeft(5)))),2)
+    assert(result == expected)
+  }
+
   it should "equiped already" in {
     val equipment1: Equipment = Equipment("EQUIP ME!", Vector(EffectDuration(IncreaseDamage(10), Permanent)))
     val equipment2: Equipment = Equipment("EQUIP ME!", Vector(EffectDuration(IncreaseDamage(5), UntilDeath)))
