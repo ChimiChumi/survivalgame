@@ -5,4 +5,4 @@
  * @param x   coordinate
  * @param y   coordinate
  */
-case class Position(x: Double, y: Double)
+case class Position(x: Int, y: Int)

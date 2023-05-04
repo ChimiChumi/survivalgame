@@ -149,7 +149,7 @@ case class ItemStack(item: Item, quantity: Int) {
  * @param id              name of the block (i.e: wood, stone, brick, etc.)
  * @param maxStackSize    stackable sizes
  */
-case class Blocks(id: String) extends Placable{
+case class Block(id: String) extends Placable{
   override val maxStackSize: Int = 16
 }
 
@@ -223,7 +223,7 @@ case class Equipment(id: String, effects: Vector[EffectDuration]) extends Item {
  * @param output crafting result (i.e: 1 sword)
  */
 case class Recipe(inputs: Vector[ItemStack], output: Item) {
-  def craftItem(input: Vector[ItemStack]): Option[Item] = ???
+  def craftItem(input: Vector[ItemStack]): Option[Item] = ??? //TODO
 }
 
 

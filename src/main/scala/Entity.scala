@@ -10,6 +10,7 @@ trait Entity {
   val position: Position
 
   def heal(hp: Int): EntityStats // increase hp
+  def die: Entity // kill the entity
   def takeDamage(hp: Int): Option[EntityStats] // lower hp
   def addEffect(ed: EffectDuration): Entity // placing effects on entity
   def removeEffects(p: EffectDuration => Boolean): Entity // removing effects from entity
@@ -45,6 +46,8 @@ case class Mob(
     if (currentStats.hp + hp >= baseStats.hp) currentStats.copy(hp = baseStats.hp)
     else currentStats.copy(hp = currentStats.hp + hp)
   }
+
+  override def die: Entity = this
 
   /**
    * Causes damage for the entity by the given amount.
@@ -166,7 +169,7 @@ case class Player(
                    equipmentSlots: Set[Equipment],
                    onCursor: ItemStack,
                    respawnPosition: Position,
-                   reachingDistance: Double,
+                   reachingDistance: Int,
                    weaponOnPlayer: Option[Weapon],
                    armorOnPlayer: Option[Armor]
                  ) extends Entity {
@@ -184,6 +187,26 @@ case class Player(
     if (currentStats.hp + hp >= baseStats.hp) currentStats.copy(hp = baseStats.hp)
     else currentStats.copy(hp = currentStats.hp + hp)
   }
+
+  //TODO TESTIIIING
+  override def die: Player = {
+    val respawnEffects = removeEffects(ed => {
+      if (ed.duration == UntilDeath || ed.duration.isInstanceOf[TicksLeft]) true
+      else false
+    }).currentEffects
+
+    copy(currentStats = currentStats.copy(hp = (baseStats.hp / 2).ceil.toInt), position = respawnPosition, currentEffects = respawnEffects)
+  }
+
+
+  //TODO TESTING
+  def inReach(position: Position): Boolean = {
+    val length: Int = math.floor(math.sqrt( math.pow(this.position.x - position.x, 2) + math.pow(this.position.y - position.y, 2))).toInt
+
+    if(length <= reachingDistance) true else false
+  }
+
+
   /**
    * Stores an Equipment in the according slots and applies its effects.
    *
@@ -196,6 +219,21 @@ case class Player(
     if (equipmentSlots.contains(item)) Some((this, item))
     else {
       Some(item.effects.foldLeft(this)((player, ed) => player.addEffect(ed).asInstanceOf[Player]).copy(equipmentSlots = equipmentSlots + item), null)
+    }
+  }
+
+  /**
+   * Consumes the item held in hand.
+   * @param item    what to be consumed
+   * @return        modified effects
+   */
+  def consume: Player = {
+    onCursor.item match {
+      case consumable: Consumable => {
+        val newPlayer: Player = consumable.effects.foldLeft(this)((player, ed) => player.addEffect(ed).asInstanceOf[Player])
+        newPlayer.copy(onCursor = newPlayer.onCursor.copy(quantity = onCursor.quantity - 1)) // consumed
+      }
+      case _ => this
     }
   }
 
