@@ -1,6 +1,13 @@
 trait Item {
   val id: String
   val maxStackSize: Int
+
+  override def equals(that: Any): Boolean = {
+    that match {
+      case that: Item => that.id == this.id && that.maxStackSize == this.maxStackSize
+      case _ => false
+    }
+  }
 }
 
 trait Placable extends Item
@@ -34,10 +41,11 @@ case class Chest(id: String, maxSlots: Int, items: Vector[ItemStack]) extends Pl
       (this, Some(stack))
     }
     else {
-      val (left, right) = items.splitAt(index)
-      val updatedItems = left ++ Vector(stack) ++ right.drop(1)
-      val updatedChest = this.copy(items = updatedItems)
-      (updatedChest, right.headOption)
+      val stackInChest = this.items(index)
+      val newVector = this.items.updated(index, stack)
+
+      if(stackInChest == null) (this.copy(items = newVector), None)
+      else (this.copy(items = newVector), Some(stackInChest))
     }
   }
 
@@ -139,7 +147,7 @@ case class ItemStack(item: Item, quantity: Int) {
 
   override def equals(that: Any): Boolean =
     that match {
-      case that: ItemStack => that.item.id == this.item.id
+      case that: ItemStack => that.item.equals(this.item) && that.quantity == this.quantity
       case _ => false
     }
 }
@@ -223,7 +231,16 @@ case class Equipment(id: String, effects: Vector[EffectDuration]) extends Item {
  * @param output crafting result (i.e: 1 sword)
  */
 case class Recipe(inputs: Vector[ItemStack], output: Item) {
-  def craftItem(input: Vector[ItemStack]): Option[Item] = ??? //TODO
+  def craftItem(input: Vector[ItemStack]): Option[Item] = {
+
+    val inputSet = inputs.toSet
+    val expectedSet = input.toSet  // method parameter
+
+    val res = inputSet.diff(expectedSet)
+
+    if(res.isEmpty) Some(output)
+    else None
+  }
 }
 
 
