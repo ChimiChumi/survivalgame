@@ -93,6 +93,45 @@ case class Mine(id: String, position: Position) extends Request {
   }
 }
 
+case class Place(playerID: String, position: Position) extends Request{
+  override def applyRequest(state: WorldState): WorldState = {
+    val hasPlayer: Boolean = state.worldMap.players.contains(playerID)
+    val hasBlock: Boolean = state.worldMap.map(position.x)(position.y).isInstanceOf[Block]
+
+
+    if(hasPlayer && !hasBlock){
+      val isPlacable: Boolean = state.worldMap.players(playerID).onCursor.isInstanceOf[Placable]
+
+      if(isPlacable) {
+        val newPlayer: Player = state.worldMap.players(playerID).copy(onCursor = null)
+
+        state.copy(worldMap = state.worldMap.copy(map = state.worldMap.map
+          .updated(position.x, state.worldMap.map(position.y)
+            .updated(position.y,state.worldMap.players(playerID).onCursor.asInstanceOf[Placable])), players = state.worldMap.players.updated(playerID, newPlayer)))
+      }
+    }
+    state
+  }
+}
+
+/**
+ * Request to consume the item held in hand.
+ * @param playerID    which player should consume the item on cursor
+ */
+case class Consume(playerID: String) extends Request {
+  override def applyRequest(state: WorldState): WorldState = {
+    val hasPlayer: Boolean = state.worldMap.players.contains(playerID)
+
+    if (hasPlayer) {
+      val player: Player = state.worldMap.players(playerID)
+      val newPlayer: Player = player.consume
+      state.copy(worldMap = state.worldMap.copy(players = state.worldMap.players.updated(playerID, newPlayer)))
+    }
+    else
+      state
+  }
+}
+
 
 case class StoreItem(playerID: String, chestID: String) extends Request {
   override def applyRequest(state: WorldState): WorldState = {
@@ -115,33 +154,101 @@ case class StoreItem(playerID: String, chestID: String) extends Request {
   }
 }
 
-/**
- * Request to consume the item held in hand.
- * @param playerID    which player should consume the item on cursor
- */
-case class Consume(playerID: String) extends Request {
+case class CraftRecipe(playerID: String, recipe: Recipe) extends Request{
   override def applyRequest(state: WorldState): WorldState = {
-    val hasPlayer: Boolean = state.worldMap.players.contains(playerID)
+    if (state.worldMap.players.contains(playerID)) {
+      val newPlayer = state.worldMap.players(playerID)
 
-    if (hasPlayer) {
-      val player: Player = state.worldMap.players(playerID)
-      val newPlayer: Player = player.consume
-      state.copy(worldMap = state.worldMap.copy(players = state.worldMap.players.updated(playerID, newPlayer)))
+      // check if hand is empty
+      if (newPlayer.onCursor == null) {
+        val crafted = recipe.craftItem(newPlayer.inventory.items)
+        if (crafted.isEmpty) {
+          println(s"Not enough ingredients to craft $recipe!")
+        }
+        else {
+          recipe.inputs.foreach(itemStack => {
+            val index = newPlayer.inventory.items.zipWithIndex.maxBy(stackWithIndex => {
+              itemStack == stackWithIndex._1
+            })._2
+
+            if (index >= 0) {
+              val foundStack = newPlayer.inventory.items(index)
+              val newQuantity = foundStack.quantity - itemStack.quantity
+              if (newQuantity <= 0) {
+                newPlayer.inventory.items.updated(index, null)
+              }
+              else {
+                newPlayer.inventory.items.updated(index, itemStack.copy(quantity = newQuantity))
+              }
+            }
+          })
+          state.copy(worldMap = state.worldMap.copy(players = state.worldMap.players.updated(playerID, newPlayer.copy(onCursor = crafted.get.asInstanceOf[ItemStack]))))
+        }
+      }
+      state
     }
     else
       state
   }
 }
-case class MoveEntity(entityID: String, position: Position) extends Request {
-  override def applyRequest(state: WorldState): WorldState = ???
-}
-case class HitEntity(attackerID: String, defenderID: String) extends Request {
-  override def applyRequest(state: WorldState): WorldState = ???
-}
+
 case class LootItem(playerID: String, chestID: String, index: Int) extends Request {
   override def applyRequest(state: WorldState): WorldState = ???
 }
 
+case class MoveEntity(entityID: String, position: Position) extends Request {
+  override def applyRequest(state: WorldState): WorldState = {
+    val hasPlayer: Boolean = state.worldMap.players.contains(entityID)
+    val hasBlock: Boolean = state.worldMap.map(position.x)(position.y).isInstanceOf[Block]
+
+    if(hasPlayer && !hasBlock){
+      state.copy(worldMap = state.worldMap.copy(players = state.worldMap.players.updated(entityID, state.worldMap.players(entityID).moveTo(position).asInstanceOf[Player])))
+    }
+    else
+      state
+  }
+}
+
+case class HitEntity(attackerID: String, defenderID: String) extends Request {
+  override def applyRequest(state: WorldState): WorldState = {
+    val attacker: Entity =
+      if (state.worldMap.players.contains(attackerID)) {
+        state.worldMap.players(attackerID)
+      }
+      else if (state.worldMap.mobs.contains(attackerID))
+        state.worldMap.mobs(attackerID)
+      else
+        null
+
+    val defender: Entity =
+      if(state.worldMap.players.contains(defenderID)){
+        state.worldMap.players(defenderID)
+      }
+      else if (state.worldMap.mobs.contains(defenderID))
+        state.worldMap.mobs(defenderID)
+      else
+        null
+
+    if(attacker == null || defender == null) state
+
+    else
+      {
+        if(defender.reachingDistance <= attacker.reachingDistance){
+          val newDefender: EntityStats = defender.takeDamage(attacker.currentStats.attack - defender.currentStats.defense).get
+
+          if(newDefender.hp <= 0){
+            state.copy(requests = state.requests.appended(Die(defenderID))) // meghalt az entity
+          }
+
+          defender match {
+            case player: Player => state.copy(worldMap = state.worldMap.copy(players = state.worldMap.players.updated(defenderID, player.copy(currentStats = newDefender))))
+            case mob: Mob => state.copy(worldMap = state.worldMap.copy(mobs = state.worldMap.mobs.updated(defenderID, mob.copy(currentStats = newDefender))))
+          }
+        }
+        state
+      }
+  }
+}
 
 //todo finish docs
 /**
@@ -151,7 +258,6 @@ case class LootItem(playerID: String, chestID: String, index: Int) extends Reque
  * @param mobs          mobs present in the game
  * @param gameRules     rules present in the game
  */
-
 case class WorldMap(
                      map: Vector[Vector[Placable]],
                      players: Map[String, Player],
@@ -175,22 +281,3 @@ case class WorldState(worldMap: WorldMap, requests: Seq[Request]){
   def saveWorldState(worldState: WorldState, filePath: String): Unit = ??? // save WorldState object to JSON file
   def loadWorldState(filePath: String): Option[WorldState] = ??? // load WorldState object from a JSON file
 }
-
-
-
-
-/**
- * Consuming a desired item.
- * @param item to be consumed
- * @return added equipment effects to currentEffects vector
- */
-/*
-TODO ezt a playerhez irtam kozbe ide kell.
-
-   Ugy kene mukodjon, hogy az effektek hossza osszeadodjon ha mar van rajta olyan
-   (pl ticksLeft(5) v ticksleft(10) -> ticksLeft(10) )
-
-def consume(item: Consumable): Player = {
-item.effects.foldLeft(this)((player, ed) => player.addEffect(ed).asInstanceOf[Player])
-
- */
