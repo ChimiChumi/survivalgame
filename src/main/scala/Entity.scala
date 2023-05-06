@@ -1,6 +1,4 @@
 import scala.collection.immutable._
-import DurationOrdering.compare
-
 trait Entity {
   val name: String
   val id: String
@@ -8,6 +6,7 @@ trait Entity {
   val currentStats: EntityStats
   val baseStats: EntityStats
   val position: Position
+  val reachingDistance: Int
 
   def heal(hp: Int): EntityStats // increase hp
   def die: Entity // kill the entity
@@ -34,7 +33,8 @@ case class Mob(
                 baseStats: EntityStats,
                 currentStats: EntityStats,
                 currentEffects: Vector[EffectDuration],
-                position: Position
+                position: Position,
+                reachingDistance: Int,
               ) extends Entity {
 
   /**
@@ -206,7 +206,6 @@ case class Player(
     if(length <= reachingDistance) true else false
   }
 
-
   /**
    * Stores an Equipment in the according slots and applies its effects.
    *
@@ -297,7 +296,15 @@ case class Player(
    * @param pos x,y coordinates
    * @return New position
    */
-  override def moveTo(pos: Position): Entity = copy(position = pos)
+  override def moveTo(pos: Position): Entity = {
+    val length: Double = math.sqrt(math.pow(this.position.x - position.x, 2) + math.pow(this.position.y - position.y, 2))
+
+    if (length <= currentStats.speed) {
+      copy(position = pos)
+    }
+    else
+      this
+  }
 
   /**
    * This represents the lifecycle of the game.
