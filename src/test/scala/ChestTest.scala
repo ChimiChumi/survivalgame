@@ -126,15 +126,15 @@ class ChestTest extends AnyFlatSpec {
     val expected = (Chest("chest3", 16,
       Vector(
         ItemStack(Block("brick"),3),
-        ItemStack(Block("wood"),5),
+        ItemStack(Block("wood"),12),
         null,
         ItemStack(Block("SWAP_ME!"),3),
         ItemStack(Block("brick"),1),
         null,
         null,
-        ItemStack(Block("wood"),9),
+        ItemStack(Block("wood"),14),
         null,
-        null)), Some(null))
+        null)), None)
     val result = chest3.swap(3, test)
     assert(result == expected)
   }
@@ -162,5 +162,17 @@ class ChestTest extends AnyFlatSpec {
         null,
         null)),None)
      assert(result == expected)
+  }
+
+  it should "less material" in {
+    //todo assert
+    val sword: Recipe = Recipe(Vector(ItemStack(Loot("stick"), 2), ItemStack(Loot("metal"), 3)), Weapon("axe", 5))
+    println(sword.craftItem(Vector(ItemStack(Loot("stick"), 2), ItemStack(Loot("metal"), 4))))
+  }
+
+  it should "equal materials, different order" in {
+    //todo assert
+    val sword: Recipe = Recipe(Vector(ItemStack(Loot("stick"), 2), ItemStack(Loot("metal"), 3)), Weapon("axe", 5))
+    println(sword.craftItem(Vector(ItemStack(Loot("metal"), 3), ItemStack(Loot("stick"), 2), ItemStack(Loot("poop"), 3), ItemStack(Loot("poop"), 3), ItemStack(Loot("poop"), 3), ItemStack(Loot("poop"), 3))))
   }
 }

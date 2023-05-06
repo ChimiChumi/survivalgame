@@ -26,6 +26,7 @@ class EntityTest extends AnyFlatSpec {
     EntityStats(10, 5, 2, 75, 0), // aktuális
     Vector(EffectDuration(null, null)),
     Position(0, 0),
+    1
   )
 
   "methods for players" should "heal" in {
