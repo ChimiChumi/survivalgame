@@ -60,54 +60,57 @@ case class Chest(id: String, maxSlots: Int, items: Vector[ItemStack]) extends Pl
   }
 
   // adding stacks of items to the chest
+  def vectorItemStackRec(chest: Chest, toPutInChestStack: ItemStack): (Chest, Option[ItemStack]) = {
+    if (toPutInChestStack == null) {
+      (chest, None)
+    } else {
+      val itemIndex = chest.items.indexWhere(itemStack => {
+        itemStack != null && itemStack.item == toPutInChestStack.item && itemStack.quantity < toPutInChestStack.item.maxStackSize
+      })
+      if (itemIndex <= 0) {
+
+        val index = chest.items.indexWhere(_ == null) // checking for empty slot
+
+        if (index >= 0) { // found an empty slot
+          val newItems = chest.items.updated(index, toPutInChestStack)
+          (chest.copy(items = newItems), None)
+        }
+        else
+        // no empty slot but we still have remaining items
+          (chest, Option[ItemStack](toPutInChestStack))
+
+      }
+      else {
+        //temporary stack
+        val existingStack = chest.items(itemIndex)
+
+        //new quantity
+        val newQuantity = existingStack.quantity + toPutInChestStack.quantity
+
+        //remaining quantity after filling up stack
+
+        val remainingItemStack = if (newQuantity > existingStack.item.maxStackSize) toPutInChestStack.copy(
+          quantity = newQuantity - existingStack.item.maxStackSize) else null
+
+        //filling up stack
+        val newStack = ItemStack(existingStack.item, math.min(newQuantity, existingStack.item.maxStackSize))
+
+        // updated stack
+        val updatedItems = chest.items.updated(itemIndex, newStack)
+
+        vectorItemStackRec(chest.copy(items = updatedItems), remainingItemStack)
+
+      }
+    }
+  }
+
   def +(stack: ItemStack): (Chest, Option[ItemStack]) = {
     if (this.isEmpty)
       (Chest(id, maxSlots, items.appended(stack)), None)
 
     //if chest has items inside
     else {
-      var quantity = stack.quantity //original quantity
-      var currentItems = items //original item vector
-
-      while (quantity > 0) {
-        // index where the same stack is found
-        val itemIndex = currentItems.indexWhere(item => {
-          item != null && item.item == stack.item && item.quantity < stack.item.maxStackSize
-        })
-
-        // found a matching stack
-        if (itemIndex >= 0) {
-          //temporary stack
-          val existingStack = items(itemIndex)
-
-          //new quantity
-          val newQuantity = existingStack.quantity + quantity
-
-          //remaining quantity after filling up stack
-          quantity = newQuantity - existingStack.item.maxStackSize
-
-          //filling up stack
-          val newStack = ItemStack(existingStack.item, math.min(newQuantity, existingStack.item.maxStackSize))
-
-          // updated stack
-          currentItems = currentItems.updated(itemIndex, newStack)
-        }
-
-        // no matching stack with space found
-        else {
-          val index = currentItems.indexWhere(_ == null) // checking for empty slot
-
-          if (index >= 0) { // found an empty slot
-            val newItems = currentItems.updated(index, ItemStack(stack.item, quantity))
-            return (Chest(id, maxSlots, newItems), None)
-          }
-          else
-          // no empty slot but we still have remaining items
-            return (this, Option[ItemStack](ItemStack(stack.item, quantity)))
-        }
-      }
-      // feltoltottuk az osszes stacket
-      (Chest(id, maxSlots, currentItems), None)
+      vectorItemStackRec(this, stack)
     }
   }
 }
