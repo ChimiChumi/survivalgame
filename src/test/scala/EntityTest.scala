@@ -45,6 +45,12 @@ class EntityTest extends AnyFlatSpec {
     assert(expected == result)
   }
 
+  it should "die" in {
+    val testPlayer: Player = player.copy(inventory = player.inventory.copy(items = Vector[ItemStack](ItemStack(Block("test"), 16))))
+    println(testPlayer.inventory.items)
+    println(testPlayer.die)
+  }
+
   it should "equip" in {
     val equipment1: Equipment = Equipment("EQUIP ME!", Vector(EffectDuration(IncreaseDamage(10), Permanent)))
     val result = player.equip(equipment1).get._1.asInstanceOf[Player].equipmentSlots

@@ -16,6 +16,12 @@ trait Entity {
   def applyEffects: EntityStats // applying awaited effects, changing stats
   def moveTo(position: Position): Entity // change position on the map
   def tick: Option[Entity] // clock, needed to check entity status after each tick
+
+  def inReach(position: Position): Boolean = {
+    val length: Int = math.floor(math.sqrt(math.pow(this.position.x - position.x, 2) + math.pow(this.position.y - position.y, 2))).toInt
+
+    if (length <= reachingDistance) true else false
+  }
 }
 
 /**
@@ -188,22 +194,13 @@ case class Player(
     else currentStats.copy(hp = currentStats.hp + hp)
   }
 
-  //TODO TESTIIIING
   override def die: Player = {
     val respawnEffects = removeEffects(ed => {
       if (ed.duration == UntilDeath || ed.duration.isInstanceOf[TicksLeft]) true
       else false
     }).currentEffects
 
-    copy(currentStats = currentStats.copy(hp = (baseStats.hp / 2).ceil.toInt), position = respawnPosition, currentEffects = respawnEffects)
-  }
-
-
-  //TODO TESTING
-  def inReach(position: Position): Boolean = {
-    val length: Int = math.floor(math.sqrt( math.pow(this.position.x - position.x, 2) + math.pow(this.position.y - position.y, 2))).toInt
-
-    if(length <= reachingDistance) true else false
+    copy(currentStats = currentStats.copy(hp = (baseStats.hp / 2).ceil.toInt), position = respawnPosition, currentEffects = respawnEffects, inventory = inventory.copy(items = Vector[ItemStack]()))
   }
 
   /**

@@ -4,14 +4,14 @@ class GameRulesTest extends AnyFlatSpec {
   val item1: Armor          = Armor("shield", 5)
   val item2: Weapon         = Weapon("sword", 10)
   val item3: Weapon         = Weapon("axe", 3)
-  val item4: Block         = Block("stone")
-  val item5: Block         = Block("wood")
-  val item6: Equipment      = Equipment("lasergoogles", Vector(EffectDuration(ScaleDefense(5), UntilDeath)))
+  val item4: Block          = Block("stone")
+  val item5: Block          = Block("wood")
+  val item6: Equipment      = Equipment("laser-goggles", Vector(EffectDuration(ScaleDefense(5), UntilDeath)))
 
   val loot1: Loot           = Loot("stick")
   val loot2: Loot           = Loot("iron")
 
-  val door: Block          = Block("door")
+  val door: Block           = Block("door")
   val sword: Weapon         = item2
 
   val doorRecipe:  Recipe   = Recipe(Vector[ItemStack](ItemStack(item5, 4), ItemStack(item4, 2)), door)
@@ -32,7 +32,7 @@ class GameRulesTest extends AnyFlatSpec {
         Weapon("axe",3),
         Block("stone"),
         Block("wood"),
-        Equipment("lasergoogles",Vector(EffectDuration(ScaleDefense(5.0),UntilDeath))),
+        Equipment("laser-goggles",Vector(EffectDuration(ScaleDefense(5.0),UntilDeath))),
         Loot("stick"), Loot("iron")
       ))
 
@@ -65,7 +65,7 @@ class GameRulesTest extends AnyFlatSpec {
 
   it should "getEquipments" in {
     val res = rules.getEquipments
-    val expected = Some(Vector(Equipment("lasergoogles",Vector(EffectDuration(ScaleDefense(5.0),UntilDeath)))))
+    val expected = Some(Vector(Equipment("laser-goggles",Vector(EffectDuration(ScaleDefense(5.0),UntilDeath)))))
     assert(res == expected)
   }
 
