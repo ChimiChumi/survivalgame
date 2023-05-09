@@ -105,8 +105,6 @@ class WorldStateTest extends AnyFlatSpec {
     None
   )
 
-  val players: Map[String, Player] = Map(player1.id -> player1) // for testing purposes, only one
-
   // mobs
   val zombie: Mob = Mob(
     "zombie",
@@ -136,6 +134,7 @@ class WorldStateTest extends AnyFlatSpec {
     1
   )
 
+  val players: Map[String, Player] = Map(player1.id -> player1) // for testing purposes, only one
   val mobs: Map[String, Mob] = Map(zombie.id -> zombie, skeleton.id -> skeleton, creeper.id -> creeper)
 
   val map: Vector[Vector[Placable]] = Vector(
@@ -152,12 +151,12 @@ class WorldStateTest extends AnyFlatSpec {
   )
 
   val worldMap: WorldMap = WorldMap(map, players, mobs, rules)
+  val requests: Seq[Request] = Seq(Tick, Die(player1.id), Tick)
+  val worldState: WorldState = WorldState(worldMap, requests)
 
-  val worldState: WorldState = WorldState(worldMap, null)
 
 
-
-  "Testing requests for WorldState" should "tick entities" in {
+  "Testing methods for Request" should "tick entities" in {
     val newState = Join(player2).applyRequest(worldState)
     println(Tick.applyRequest(newState).worldMap.players)
     println(Tick.applyRequest(newState).worldMap.mobs)
@@ -237,6 +236,50 @@ class WorldStateTest extends AnyFlatSpec {
 
   it should "hit entity" in {
     print(HitEntity(creeper.id, player1.id).applyRequest(worldState).worldMap.players(player1.id))
+  }
+
+
+  /**##################################################################################################**/
+
+  "Testing methods for WorldState" should "handle" in {
+    println("TODO: handle")
+  }
+
+  it should "hasRequests" in {
+    print(worldState.hasRequests)
+  }
+
+  it should "processNextRequest" in {
+    val res = worldState.processNextRequest.requests
+    assert(res.size == 2)
+  }
+
+  it should "players connected" in {
+    println(worldState.players)
+  }
+
+  it should "game map width and height" in {
+    assert(worldState.width == 10 && worldState.height == 10)
+  }
+
+  it should "apply with x,y" in {
+    val res1 = worldState.apply(0,2).get.id
+    val res2 = worldState.apply(0,0)
+    val expected1 = "stone"
+    val expected2 = None
+
+    assert(res1 == expected1 && res2 == expected2)
+  }
+
+  it should "apply with position" in {
+    val pos1 = Position(0,9)
+    val pos2 = Position(0,8)
+    val res1 = worldState.apply(pos1).get.id
+    val res2 = worldState.apply(pos2)
+    val expected1 = "sand"
+    val expected2 = None
+
+    assert(res1 == expected1 && res2 == expected2)
   }
 
 }

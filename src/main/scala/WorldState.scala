@@ -1,4 +1,4 @@
-sealed trait Request {
+trait Request {
   def applyRequest(state: WorldState): WorldState
   // similar to switch-case request matching, but more optimized. The requests can directly call themselves.
 }
@@ -433,21 +433,44 @@ case class WorldMap(
  * @param requests requests in a sequence waiting to be processed
  */
 case class WorldState(worldMap: WorldMap, requests: Seq[Request]) {
+  //TODO nekünk direkt request híváshoz kell-e handle?
   def handle(request: Request): WorldState = ???
 
   def hasRequests: Boolean = requests.nonEmpty // checks if there are any unhandled requests
 
-  def processNextRequest: WorldState = ??? // move to the next request
+  /**
+   * Moves to the next requests, removing the current one from the sequence
+   * @return  modified worldstate
+   */
+  def processNextRequest: WorldState = {
+    if(!hasRequests || players.isEmpty) this
+    else{
+      val nextState = requests.head.applyRequest(this)
+      nextState.copy(requests = requests.tail)
+    }
+  }
 
   def players: Vector[Player] = worldMap.players.values.toVector // get the actual players present in the world
 
-  def apply(x: Int, y: Int): Option[Placable] = ??? // get the position of a block if exists
+  /**
+   * Get the block of a given position if exists.
+   * @param x           coordinate for row
+   * @param y           coordinate for column
+   * @return            Option of a block
+   */
+  def apply(x: Int, y: Int): Option[Placable] = Option(this.worldMap.map(x)(y))
 
-  def apply(position: Position): Option[Placable] = ??? // similar as the previous
 
-  def width: Int = worldMap.map.length // map width
+  /**
+   * Get the block of a given position if exists.
+   * @param position    x,y bundled into position
+   * @return            Option of a block
+   */
+  def apply(position: Position): Option[Placable] = Option(this.worldMap.map(position.x)(position.y))
 
-  def height: Int = worldMap.map(0).length // map height
+  def width: Int = worldMap.map.length // worldmap width
+
+  def height: Int = worldMap.map(0).length // worldmap height
 
   def saveWorldState(worldState: WorldState, filePath: String): Unit = ??? // save WorldState object to JSON file
 
