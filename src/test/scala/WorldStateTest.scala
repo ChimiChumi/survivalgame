@@ -155,7 +155,6 @@ class WorldStateTest extends AnyFlatSpec {
   val worldState: WorldState = WorldState(worldMap, requests)
 
 
-
   "Testing methods for Request" should "tick entities" in {
     val newState = Join(player2).applyRequest(worldState)
     println(Tick.applyRequest(newState).worldMap.players)
@@ -178,60 +177,60 @@ class WorldStateTest extends AnyFlatSpec {
   }
 
   it should "die" in {
-    val newState = Die("1").applyRequest(worldState)
-    val res = newState.worldMap.players("1")
-    val expected = Player("Player1","1",EntityStats(35,0,1.0,100,5),EntityStats(35,0,1.0,50,5),Vector(),Position(0,0),10,Chest("inventory1",10,Vector()),Set(),null,Position(0,0),2,None,None)
+    val newState = Die(player1.id).applyRequest(worldState)
+    val res = newState.worldMap.players(player1.id)
+    val expected = Player("Player1",player1.id,EntityStats(35,0,1.0,100,5),EntityStats(35,0,1.0,50,5),Vector(),Position(0,0),10,Chest("inventory1",10,Vector()),Set(),null,Position(0,0),2,None,None)
     assert(res == expected)
   }
 
   it should "mine" in {
-    val newState = Mine("1", Position(0,2)).applyRequest(worldState)
-    val nextState = Mine("1", Position(0,2)).applyRequest(newState)
-    val res = nextState.worldMap.players("1").inventory.items
+    val newState = Mine(player1.id, Position(0,2)).applyRequest(worldState)
+    val nextState = Mine(player1.id, Position(0,2)).applyRequest(newState)
+    val res = nextState.worldMap.players(player1.id).inventory.items
     val expected = Vector(ItemStack(scrapMetal, 3), ItemStack(stone, 3), null, null, null, null, null, null, null, null)
     assert(res == expected)
   }
 
   it should "place" in {
     val testState = Join(player2).applyRequest(worldState)
-    val nextState = Place("2", Position(0, 0)).applyRequest(testState)
-    val res = nextState.worldMap.players("1").inventory.items
+    val nextState = Place(player2.id, Position(0, 0)).applyRequest(testState)
+    val res = nextState.worldMap.players(player1.id).inventory.items
     val expected = Vector(ItemStack(Block("stone"), 16), ItemStack(Block("stone"), 14), null, null, null, null, null, null, null, null)
     //assert(res == expected)
-    println(nextState.worldMap.players("2").onCursor)
+    println(nextState.worldMap.players(player2.id).onCursor)
     println(nextState.worldMap.map)
   }
 
   it should "consume" in {
     val testState = Join(player3).applyRequest(worldState)
-    print(Consume("3").applyRequest(testState).worldMap.players("3").onCursor)
+    print(Consume(player3.id).applyRequest(testState).worldMap.players(player3.id).onCursor)
   }
 
   it should "store item" in {
     val testState = Join(player2).applyRequest(worldState)
-    println(StoreItem("2", "chest1").applyRequest(testState).worldMap.map(0)(1))
+    println(StoreItem(player2.id, "chest1").applyRequest(testState).worldMap.map(0)(1))
 
     //more test cases
   }
 
   it should "loot item" in {
     val initial = Join(player2).applyRequest(worldState)
-    val testState = StoreItem("2", "chest1").applyRequest(initial)
-    println(testState.worldMap.players("2").onCursor)
+    val testState = StoreItem(player2.id, "chest1").applyRequest(initial)
+    println(testState.worldMap.players(player2.id).onCursor)
 
-    val nextState = LootItem("2", "chest1", 2).applyRequest(testState)
+    val nextState = LootItem(player2.id, "chest1", 2).applyRequest(testState)
     print(nextState.worldMap.map(0)(1))
   }
 
   it should "craft item" in {
     //todo assert
-    println(worldState.worldMap.players("1").inventory.items)
-    println(CraftRecipe("1", chestPlate_recipe).applyRequest(worldState).worldMap.players("1").onCursor)
-    println(CraftRecipe("1", chestPlate_recipe).applyRequest(worldState).worldMap.players("1").inventory.items)
+    println(worldState.worldMap.players(player1.id).inventory.items)
+    println(CraftRecipe(player1.id, chestPlate_recipe).applyRequest(worldState).worldMap.players(player1.id).onCursor)
+    println(CraftRecipe(player1.id, chestPlate_recipe).applyRequest(worldState).worldMap.players(player1.id).inventory.items)
   }
 
   it should "move entity" in {
-    print(MoveEntity("1", Position(6,0)).applyRequest(worldState).worldMap.players)
+    print(MoveEntity(player1.id, Position(6,0)).applyRequest(worldState).worldMap.players)
   }
 
   it should "hit entity" in {
