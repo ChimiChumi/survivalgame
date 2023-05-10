@@ -1,4 +1,7 @@
-trait Request {
+import java.io.{FileInputStream, FileOutputStream, ObjectInputStream, ObjectOutputStream}
+import scala.collection.immutable._
+
+trait Request extends Serializable{
   def applyRequest(state: WorldState): WorldState
   // similar to switch-case request matching, but more optimized. The requests can directly call themselves.
 }
@@ -424,7 +427,7 @@ case class WorldMap(
                      players: Map[String, Player],
                      mobs: Map[String, Mob],
                      gameRules: GameRules
-                   ) {}
+                   ) extends Serializable
 
 
 
@@ -432,47 +435,98 @@ case class WorldMap(
  * @param worldMap the WorldState is initialized with a previously defined WorldMap and it's data
  * @param requests requests in a sequence waiting to be processed
  */
-case class WorldState(worldMap: WorldMap, requests: Seq[Request]) {
-  //TODO nekünk direkt request híváshoz kell-e handle?
-  def handle(request: Request): WorldState = ???
+case class WorldState(worldMap: WorldMap, requests: Seq[Request]) extends Serializable{
 
+  /**
+   * Applies the incoming request, modifying the WorldState
+   * @param request     incoming request
+   * @return            modified WorldState
+   */
+  def handle(request: Request): WorldState = request.applyRequest(this)
+
+
+  /**
+   * Checks whether the sequence contains requests or not.
+   */
   def hasRequests: Boolean = requests.nonEmpty // checks if there are any unhandled requests
 
   /**
    * Moves to the next requests, removing the current one from the sequence
-   * @return  modified worldstate
+   *
+   * @return modified worldState
    */
   def processNextRequest: WorldState = {
-    if(!hasRequests || players.isEmpty) this
-    else{
-      val nextState = requests.head.applyRequest(this)
+    if (!hasRequests || players.isEmpty) this
+    else {
+      val nextState = handle(requests.head)
       nextState.copy(requests = requests.tail)
     }
   }
 
+  /**
+   * Gets the current players in the active WorldState.
+   */
   def players: Vector[Player] = worldMap.players.values.toVector // get the actual players present in the world
 
   /**
    * Get the block of a given position if exists.
-   * @param x           coordinate for row
-   * @param y           coordinate for column
-   * @return            Option of a block
+   * @param x coordinate for row
+   * @param y coordinate for column
    */
   def apply(x: Int, y: Int): Option[Placable] = Option(this.worldMap.map(x)(y))
 
-
   /**
    * Get the block of a given position if exists.
-   * @param position    x,y bundled into position
-   * @return            Option of a block
+   * @param position x,y bundled into position
    */
   def apply(position: Position): Option[Placable] = Option(this.worldMap.map(position.x)(position.y))
 
+  /**
+   * The world map length based on width.
+   */
   def width: Int = worldMap.map.length // worldmap width
 
+  /**
+   * The world map length based on height.
+   */
   def height: Int = worldMap.map(0).length // worldmap height
 
-  def saveWorldState(worldState: WorldState, filePath: String): Unit = ??? // save WorldState object to JSON file
+  /**
+   * Saves the game session using java.io.Serializable
+   * @param state       given WorldState
+   * @param filePath    target file
+   */
+  def save(state: WorldState, filePath: String): Unit = {
+    val fileOut = new FileOutputStream(filePath)
+    val objectOut = new ObjectOutputStream(fileOut)
 
-  def loadWorldState(filePath: String): Option[WorldState] = ??? // load WorldState object from a JSON file
+    try {
+      objectOut.writeObject(state)
+    } finally {
+      objectOut.close()
+      fileOut.close()
+    }
+  }
+
+  /**
+   * Loads the previously saved session.
+   * @param filePath    target file
+   */
+  def load(filePath: String): Option[WorldState] = {
+    val fileIn = new FileInputStream(filePath)
+    val objectIn = new ObjectInputStream(fileIn)
+
+    try {
+      Some(objectIn.readObject().asInstanceOf[WorldState])
+    } catch {
+      case e: Exception =>
+        e.printStackTrace()
+        None
+    } finally {
+      objectIn.close()
+      fileIn.close()
+    }
+  }
 }
+
+

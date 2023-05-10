@@ -242,7 +242,7 @@ class WorldStateTest extends AnyFlatSpec {
   /**##################################################################################################**/
 
   "Testing methods for WorldState" should "handle" in {
-    println("TODO: handle")
+    println(worldState.handle(Tick))
   }
 
   it should "hasRequests" in {
@@ -280,6 +280,12 @@ class WorldStateTest extends AnyFlatSpec {
     val expected2 = None
 
     assert(res1 == expected1 && res2 == expected2)
+  }
+
+  it should "save and load" in {
+    worldState.save(worldState, "gamesaves/last-save")
+    val loadedState = worldState.load("gamesaves/last-save")
+    print(loadedState)
   }
 
 }
