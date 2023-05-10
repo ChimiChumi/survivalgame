@@ -1,3 +1,5 @@
+import scala.collection.immutable._
+
 /**
  * The global rules of the world.
  * It consists of multiple getters for items, recipes and other things present in the game.
@@ -5,7 +7,7 @@
  * @param itemTypes      Items used in the game
  * @param recipeTypes    Crafting recipes
  */
-case class GameRules(itemTypes: Vector[Item], recipeTypes:Vector[Recipe]) {
+case class GameRules(itemTypes: Vector[Item], recipeTypes:Vector[Recipe]) extends Serializable{
   def getItems(p: Item => Boolean): Option[Vector[Item]] = {
     val items = itemTypes.filter(p)
     if (items.nonEmpty) Some(items) else None

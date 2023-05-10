@@ -1,6 +1,6 @@
 import Priority.Priority
 
-trait Duration{
+trait Duration extends Serializable{
   val priority: Priority
 }
 

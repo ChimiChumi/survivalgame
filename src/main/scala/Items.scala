@@ -1,4 +1,6 @@
-trait Item {
+import scala.collection.immutable._
+
+trait Item extends Serializable{
   val id: String
   val maxStackSize: Int
 
@@ -233,7 +235,7 @@ case class Equipment(id: String, effects: Vector[EffectDuration]) extends Item {
  * @param inputs crafting ingredients (i.e: 2 wood, 3 stone, etc)
  * @param output crafting result (i.e: 1 sword)
  */
-case class Recipe(inputs: Vector[ItemStack], output: Item) {
+case class Recipe(inputs: Vector[ItemStack], output: Item) extends Serializable {
   def craftItem(input: Vector[ItemStack]): Option[Item] = {
 
     val inputSet = inputs.toSet

@@ -1,5 +1,6 @@
 import scala.collection.immutable._
-trait Entity {
+
+trait Entity extends Serializable{
   val name: String
   val id: String
   val currentEffects: Vector[EffectDuration] // pair of effects and duration
@@ -354,5 +355,4 @@ case class EntityStats(
                         speed: Double,
                         hp: Int,
                         regeneration: Int
-                      )
-
+                      ) extends Serializable
