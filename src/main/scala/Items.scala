@@ -4,6 +4,10 @@ trait Item extends Serializable{
   val id: String
   val maxStackSize: Int
 
+  /**
+   * Checking if two ItemStacks are the same
+   * @param that    other ItemStack
+   */
   override def equals(that: Any): Boolean = {
     that match {
       case that: Item => that.id == this.id && that.maxStackSize == this.maxStackSize
@@ -19,7 +23,7 @@ trait Placable extends Item
  * This acts like an itemstack, containing different items.
  *
  * @param id          A unique id differentiating the chests between them
- * @param maxCapacity The maximum capacity of items it can hold.
+ * @param maxSlots    The maximum capacity of items it can hold.
  * @param items       Currently stored items inside.
  */
 case class Chest(id: String, maxSlots: Int, items: Vector[ItemStack]) extends Placable {
@@ -125,8 +129,8 @@ case class Chest(id: String, maxSlots: Int, items: Vector[ItemStack]) extends Pl
  *    - if the two overflow, the first stack is filled
  *      and a new stack is created from the remaining amount
  *
- * @param item  item to be stacked
- * @param count amount of the item
+ * @param item        item to be stacked
+ * @param quantity    amount of the item
  */
 case class ItemStack(item: Item, quantity: Int) {
   require(quantity > 0 && quantity <= item.maxStackSize, s"The quantity for ${item.id} has to be greater than 0 and lower than ${item.maxStackSize}!")
@@ -159,8 +163,7 @@ case class ItemStack(item: Item, quantity: Int) {
 
 /**
  * Placable blocks
- * @param id              name of the block (i.e: wood, stone, brick, etc.)
- * @param maxStackSize    stackable sizes
+ * @param id     name of the block (i.e: wood, stone, brick, etc.)
  */
 case class Block(id: String) extends Placable{
   override val maxStackSize: Int = 16
@@ -179,7 +182,7 @@ case class Loot(id: String) extends Item{
  * Weapon item type providing defense. (i.e: Axe, Sword, etc.)
  * Only one can be equipped at a time. Doesn't stack.
  *
- * @param name   item name
+ * @param id   item name
  * @param damage attack damage stat value
  */
 case class Weapon(id: String, damage: Int) extends Item {
@@ -193,7 +196,7 @@ case class Weapon(id: String, damage: Int) extends Item {
  * Armor item type providing defense. (i.e: Helmet, ChestPlate, etc.)
  * Only one can be equipped at a time. Doesn't stack.
  *
- * @param name    item name
+ * @param id    item name
  * @param defense defense stat value
  */
 case class Armor(id: String, defense: Int) extends Item {
@@ -206,8 +209,8 @@ case class Armor(id: String, defense: Int) extends Item {
 /**
  * Consumable item type providing effects. i.e: Apple, Raw Meat, Potion, etc.
  *
- * @param name    item name
- * @param effects possible effects
+ * @param id          item name
+ * @param effects     possible effects
  */
 case class Consumable(id: String, effects: Vector[EffectDuration]) extends Item {
   override val maxStackSize: Int = 3 // random pre-defined number for consumable stack
@@ -216,8 +219,8 @@ case class Consumable(id: String, effects: Vector[EffectDuration]) extends Item 
 /**
  * Equipment item type providing effects. i.e: Shield, Enchanted Pickaxe, etc.
  *
- * @param name    item name
- * @param effects possible effects
+ * @param id        item name
+ * @param effects   possible effects
  */
 case class Equipment(id: String, effects: Vector[EffectDuration]) extends Item {
   override val maxStackSize: Int = 1

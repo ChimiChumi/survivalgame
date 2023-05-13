@@ -19,6 +19,7 @@ trait Entity extends Serializable{
   def tick: Option[Entity] // clock, needed to check entity status after each tick
 
   def inReach(position: Position): Boolean = {
+    // calculates distance between the original position and the given position
     val length: Int = math.floor(math.sqrt(math.pow(this.position.x - position.x, 2) + math.pow(this.position.y - position.y, 2))).toInt
 
     if (length <= reachingDistance) true else false
@@ -195,6 +196,10 @@ case class Player(
     else currentStats.copy(hp = currentStats.hp + hp)
   }
 
+  /**
+   * Method called by Die request.
+   * @return  respawned player with modified values
+   */
   override def die: Player = {
     val respawnEffects = removeEffects(ed => {
       if (ed.duration == UntilDeath || ed.duration.isInstanceOf[TicksLeft]) true
@@ -220,18 +225,13 @@ case class Player(
   }
 
   /**
-   * Consumes the item held in hand.
-   * @param item    what to be consumed
-   * @return        modified effects
+   * Consumes the item held in player hand (onCursor).
    */
-  def consume: Player = {
-    onCursor.item match {
-      case consumable: Consumable => {
+  def consume: Player = onCursor.item match {
+      case consumable: Consumable =>
         val newPlayer: Player = consumable.effects.foldLeft(this)((player, ed) => player.addEffect(ed).asInstanceOf[Player])
         newPlayer.copy(onCursor = newPlayer.onCursor.copy(quantity = onCursor.quantity - 1)) // consumed
-      }
       case _ => this
-    }
   }
 
   /**

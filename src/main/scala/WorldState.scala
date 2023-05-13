@@ -30,6 +30,10 @@ trait Request extends Serializable{
  * LootItem:      requests item to be moved to be stored
  */
 
+
+/**
+ * Ticks every entity and changes their state accordingly
+ */
 case object Tick extends Request {
   override def applyRequest(state: WorldState): WorldState = {
 
@@ -114,8 +118,8 @@ case class Die(id: String) extends Request {
 /**
  * Request the player to mine the block if is within reaching distance.
  *
- * @param id       which player
- * @param position placable block ot be mined
+ * @param playerID  which player
+ * @param position  block to be mined
  */
 case class Mine(playerID: String, position: Position) extends Request {
   override def applyRequest(state: WorldState): WorldState = {
@@ -219,7 +223,7 @@ case class StoreItem(playerID: String, chestID: String) extends Request {
       if state.worldMap.map(i)(j) != null && state.worldMap.map(i)(j).id == chestID) yield (i, j)
 
     if (chestIndex.isEmpty) {
-      //TODO comments
+      println("[LootItem]: The chest cannot be found!")
       state
     }
 
@@ -247,10 +251,10 @@ case class StoreItem(playerID: String, chestID: String) extends Request {
 }
 
 /**
- *
- * @param playerID
- * @param chestID
- * @param index
+ * Request to loot a desired chest.
+ * @param playerID    action refers to which player
+ * @param chestID     desired chest
+ * @param index       desired slot position
  */
 case class LootItem(playerID: String, chestID: String, index: Int) extends Request {
   override def applyRequest(state: WorldState): WorldState = {
@@ -260,7 +264,7 @@ case class LootItem(playerID: String, chestID: String, index: Int) extends Reque
       if state.worldMap.map(i)(j) != null && state.worldMap.map(i)(j).id == chestID) yield (i, j)
 
     if (chestIndex.isEmpty) {
-      //TODO comments
+      println("[LootItem]: The chest cannot be found!")
       state
     }
     else{
@@ -343,6 +347,11 @@ case class CraftRecipe(playerID: String, recipe: Recipe) extends Request {
   }
 }
 
+/**
+ * Request to move entity to a given position.
+ * @param entityID      which entity
+ * @param position      target position
+ */
 case class MoveEntity(entityID: String, position: Position) extends Request {
   override def applyRequest(state: WorldState): WorldState = {
     val isPlayer: Boolean = state.worldMap.players.contains(entityID)
@@ -366,6 +375,13 @@ case class MoveEntity(entityID: String, position: Position) extends Request {
   }
 }
 
+/**
+ * Combat system. Upon this request, if both entities are present they get engaged in a fight.
+ * Attack and defense values can manipulate the outcome.
+ *
+ * @param attackerID    attacker entity
+ * @param defenderID    defender entity
+ */
 case class HitEntity(attackerID: String, defenderID: String) extends Request {
   override def applyRequest(state: WorldState): WorldState = {
     val attacker: Entity =
@@ -397,8 +413,8 @@ case class HitEntity(attackerID: String, defenderID: String) extends Request {
         }
         else {
             defender match {
-              case player: Player => return state.copy(worldMap = state.worldMap.copy(players = state.worldMap.players.updated(defenderID, player.copy(currentStats = newDefender))))
-              case mob: Mob => return state.copy(worldMap = state.worldMap.copy(mobs = state.worldMap.mobs.updated(defenderID, mob.copy(currentStats = newDefender))))
+              case player: Player => state.copy(worldMap = state.worldMap.copy(players = state.worldMap.players.updated(defenderID, player.copy(currentStats = newDefender))))
+              case mob: Mob => state.copy(worldMap = state.worldMap.copy(mobs = state.worldMap.mobs.updated(defenderID, mob.copy(currentStats = newDefender))))
             }
           }
       }
@@ -409,10 +425,7 @@ case class HitEntity(attackerID: String, defenderID: String) extends Request {
   }
 }
 
-
-
-
-
+/**#####################################################################################################*/
 
 /**
  * A separate class containing information about active rules and entities during the session.

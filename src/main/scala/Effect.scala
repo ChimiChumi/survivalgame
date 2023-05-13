@@ -21,8 +21,6 @@ case class EffectDuration(effect: Effect, duration: Duration) extends Serializab
  *
  *  - Poison:          modifies health (probably in each tick)
  */
-
-
 case class IncreaseDamage(value: Int) extends Effect {
   override def apply(stats: EntityStats): EntityStats = stats.copy(attack = stats.attack + value)
   override def remove(stats: EntityStats): EntityStats = stats.copy(attack = stats.attack - value)

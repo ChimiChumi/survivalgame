@@ -165,14 +165,14 @@ class ChestTest extends AnyFlatSpec {
   }
 
   it should "less material" in {
-    //todo assert
     val sword: Recipe = Recipe(Vector(ItemStack(Loot("stick"), 2), ItemStack(Loot("metal"), 3)), Weapon("axe", 5))
-    println(sword.craftItem(Vector(ItemStack(Loot("stick"), 2), ItemStack(Loot("metal"), 4))))
+    val result = sword.craftItem(Vector(ItemStack(Loot("stick"), 2), ItemStack(Loot("metal"), 4)))
+    assert(result.isEmpty)
   }
 
   it should "equal materials, different order" in {
-    //todo assert
     val sword: Recipe = Recipe(Vector(ItemStack(Loot("stick"), 2), ItemStack(Loot("metal"), 3)), Weapon("axe", 5))
-    println(sword.craftItem(Vector(ItemStack(Loot("metal"), 3), ItemStack(Loot("stick"), 2), ItemStack(Loot("poop"), 3), ItemStack(Loot("poop"), 3), ItemStack(Loot("poop"), 3), ItemStack(Loot("poop"), 3))))
+    val result = sword.craftItem(Vector(ItemStack(Loot("metal"), 3), ItemStack(Loot("stick"), 2), ItemStack(Loot("filler1"), 3), ItemStack(Loot("filler2"), 3), ItemStack(Loot("filler3"), 3))).get
+    assert(result == sword.output)
   }
 }

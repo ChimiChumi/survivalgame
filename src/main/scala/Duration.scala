@@ -4,11 +4,14 @@ trait Duration extends Serializable{
   val priority: Priority
 }
 
+/**
+ * Setting priority for the effects for ordering them later.
+ */
 case object Priority extends Enumeration {
   type Priority = Value
-  val TicksLeft = Value(0)
-  val UntilDeath = Value(1)
-  val Permanent = Value(2)
+  val TicksLeft: Priority.Value = Value(0)
+  val UntilDeath: Priority.Value = Value(1)
+  val Permanent: Priority.Value = Value(2)
 }
 
 /**
@@ -43,7 +46,9 @@ case object Permanent extends Duration{
   override val priority: Priority = Priority.Permanent
 }
 
-
+/**
+ * Orders effects by their priority.
+ */
 object DurationOrdering extends Ordering[Duration] {
   def compare(a: Duration, b: Duration): Int = {
     val res = a.priority.compare(b.priority)

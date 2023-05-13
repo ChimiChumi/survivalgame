@@ -28,7 +28,7 @@ class WorldStateTest extends AnyFlatSpec {
   val goldenApple: Consumable = Consumable("goldenApple", Vector(EffectDuration(ScaleDefense(25), TicksLeft(15))))
 
   // crafting recipes
-  val chestPlate_recipe: Recipe = Recipe(Vector[ItemStack](ItemStack(scrapMetal, 4), ItemStack(stone, 2)), chestPlate)
+  val chestPlate_recipe: Recipe = Recipe(Vector[ItemStack](ItemStack(scrapMetal, 3), ItemStack(stone, 2)), chestPlate)
   val helmet_recipe: Recipe = Recipe(Vector[ItemStack](ItemStack(scrapMetal, 4)), helmet)
   val sword_recipe: Recipe = Recipe(Vector[ItemStack](ItemStack(scrapMetal, 3), ItemStack(wood, 2)), sword)
   val axe_recipe: Recipe = Recipe(Vector[ItemStack](ItemStack(stone, 3), ItemStack(wood, 2)), axe)
@@ -194,58 +194,59 @@ class WorldStateTest extends AnyFlatSpec {
   it should "place" in {
     val testState = Join(player2).applyRequest(worldState)
     val nextState = Place(player2.id, Position(0, 0)).applyRequest(testState)
-    val res = nextState.worldMap.players(player1.id).inventory.items
-    val expected = Vector(ItemStack(Block("stone"), 16), ItemStack(Block("stone"), 14), null, null, null, null, null, null, null, null)
-    //assert(res == expected)
-    println(nextState.worldMap.players(player2.id).onCursor)
-    println(nextState.worldMap.map)
+    assert(nextState.worldMap.map(0)(0).id == "stone" && nextState.worldMap.players(player2.id).onCursor.quantity == testState.worldMap.players(player2.id).onCursor.quantity - 1)
   }
 
   it should "consume" in {
     val testState = Join(player3).applyRequest(worldState)
-    print(Consume(player3.id).applyRequest(testState).worldMap.players(player3.id).onCursor)
+    val res = Consume(player3.id).applyRequest(testState).worldMap.players(player3.id).onCursor
+    assert(res.quantity == testState.worldMap.players(player3.id).onCursor.quantity - 1)
   }
 
   it should "store item" in {
     val testState = Join(player2).applyRequest(worldState)
-    println(StoreItem(player2.id, "chest1").applyRequest(testState).worldMap.map(0)(1))
-
-    //more test cases
+    val nextState = StoreItem(player2.id, "chest1").applyRequest(testState)
+    val res = nextState.worldMap.map(0)(1)
+    assert(res == Chest("chest1",4,Vector(ItemStack(Block("stone"),5), null, null, null)) && nextState.worldMap.players(player2.id).onCursor == null)
+    // block placed from hand
   }
 
   it should "loot item" in {
     val initial = Join(player2).applyRequest(worldState)
     val testState = StoreItem(player2.id, "chest1").applyRequest(initial)
-    println(testState.worldMap.players(player2.id).onCursor)
-
-    val nextState = LootItem(player2.id, "chest1", 2).applyRequest(testState)
-    print(nextState.worldMap.map(0)(1))
+    val nextState = LootItem(player2.id, "chest1", 0).applyRequest(testState)
+    assert(testState.worldMap.players(player2.id).onCursor == null && nextState.worldMap.players(player2.id).onCursor.item == stone)
+    // initially empty hand, later filled hand
   }
 
   it should "craft item" in {
-    //todo assert
-    println(worldState.worldMap.players(player1.id).inventory.items)
-    println(CraftRecipe(player1.id, chestPlate_recipe).applyRequest(worldState).worldMap.players(player1.id).onCursor)
-    println(CraftRecipe(player1.id, chestPlate_recipe).applyRequest(worldState).worldMap.players(player1.id).inventory.items)
+    val testState = CraftRecipe(player1.id, chestPlate_recipe).applyRequest(worldState)
+
+    assert(testState.worldMap.players(player1.id).onCursor.item == chestPlate && testState.worldMap.players(player1.id).inventory.capacity == 10)
+    // item crafted, is in hand and ingredients are removed from inventory
   }
 
   it should "move entity" in {
-    print(MoveEntity(player1.id, Position(6,0)).applyRequest(worldState).worldMap.players)
+    assert(MoveEntity(player1.id, Position(6,0)).applyRequest(worldState).worldMap.players(player1.id).position == Position(6, 0))
   }
 
   it should "hit entity" in {
-    print(HitEntity(creeper.id, player1.id).applyRequest(worldState).worldMap.players(player1.id))
+    val nextState = HitEntity( player1.id, zombie.id).applyRequest(worldState)
+    val attacker = nextState.worldMap.players(player1.id)
+    val defender = nextState.worldMap.mobs(zombie.id)
+
+    assert(defender.currentStats.hp == defender.baseStats.hp - attacker.currentStats.attack + defender.baseStats.defense)
   }
 
 
   /**##################################################################################################**/
 
   "Testing methods for WorldState" should "handle" in {
-    println(worldState.handle(Tick))
+    //println(worldState.handle(Tick))
   }
 
   it should "hasRequests" in {
-    print(worldState.hasRequests)
+    assert(worldState.hasRequests)
   }
 
   it should "processNextRequest" in {
@@ -254,7 +255,8 @@ class WorldStateTest extends AnyFlatSpec {
   }
 
   it should "players connected" in {
-    println(worldState.players)
+    val testState = Join(player2).applyRequest(worldState)
+    assert(testState.players.length == 2)
   }
 
   it should "game map width and height" in {
@@ -283,8 +285,9 @@ class WorldStateTest extends AnyFlatSpec {
 
   it should "save and load" in {
     worldState.save(worldState, "gamesaves/last-save")
-    val loadedState = worldState.load("gamesaves/last-save")
-    print(loadedState)
+    val emptyState = WorldState(null, null)
+    val loadedState = emptyState.load("gamesaves/last-save")
+    assert(loadedState.nonEmpty)
   }
 
 }
