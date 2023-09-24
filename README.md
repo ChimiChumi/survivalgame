@@ -1,4 +1,4 @@
-﻿Scala 2023 beadandó feladat
+﻿Scala 2023 beadandó feladat - Egyetemi kötprog
 
 # A feladat
 
